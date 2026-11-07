@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, mergeMap, of, throwError, timer } from 'rxjs';
 import { AuthApi, LoginRequest, LoginResponse, SessionUser } from '../auth.api';
+import { SessionStore } from '../../auth/session-store';
 import { MOCK_LATENCY_MS } from './mock-latency';
 
 // Contraseña común de los usuarios de prueba
@@ -17,6 +18,20 @@ const TOKEN_TTL_SECONDS = 8 * 60 * 60;
 
 @Injectable()
 export class AuthMockApi extends AuthApi {
+  // Sin dependencias: se instancia directo (los tests crean el mock con new)
+  private readonly store = new SessionStore();
+
+  // Como el backend: renueva la sesión guardada; sin sesión responde 401
+  refresh(): Observable<LoginResponse> {
+    const user = this.store.read()?.user;
+    if (!user) {
+      return timer(MOCK_LATENCY_MS).pipe(
+        mergeMap(() => throwError(() => new HttpErrorResponse({ status: 401, url: '/auth/refresh' }))),
+      );
+    }
+    return timer(MOCK_LATENCY_MS).pipe(mergeMap(() => of({ accessToken: createUnsignedToken(user), user })));
+  }
+
   login({ username, password }: LoginRequest): Observable<LoginResponse> {
     const user = MOCK_USERS[username.trim().toLowerCase()];
     if (!user || password !== MOCK_PASSWORD) {

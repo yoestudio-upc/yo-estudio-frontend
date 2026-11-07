@@ -49,4 +49,13 @@ describe('AuthHttpApi', () => {
     backend.expectOne('/api/auth/sign-in').flush(null, { status: 401, statusText: 'Unauthorized' });
     expect(status).toBe(401);
   });
+
+  it('renueva la sesión con POST /auth/refresh', () => {
+    let result: LoginResponse | undefined;
+    api.refresh().subscribe((r) => (result = r));
+    const req = backend.expectOne('/api/auth/refresh');
+    expect(req.request.method).toBe('POST');
+    req.flush({ access_token: 'n.e.w', token_type: 'bearer', user: { id: 7, name: 'Ana Perez', role: 'estudiante' } });
+    expect(result).toEqual({ accessToken: 'n.e.w', user: { id: '7', name: 'Ana Perez', role: 'estudiante' } });
+  });
 });

@@ -23,7 +23,12 @@ export interface LoginResponse {
 // Ruta del login en el backend (FastAPI: /api/v1/auth/sign-in; el proxy agrega /v1)
 export const LOGIN_ENDPOINT = '/auth/sign-in';
 
-// Contrato: POST /auth/sign-in (docs/04-contrato-api-propuesto.md)
+// Renueva un token todavía válido (sesión en uso)
+export const REFRESH_ENDPOINT = '/auth/refresh';
+
+// Contrato: POST /auth/sign-in y POST /auth/refresh (docs/04-contrato-api-propuesto.md)
 export abstract class AuthApi {
   abstract login(request: LoginRequest): Observable<LoginResponse>;
+  // Con el token actual (lo agrega el interceptor) entrega uno nuevo; 401 si ya venció
+  abstract refresh(): Observable<LoginResponse>;
 }
