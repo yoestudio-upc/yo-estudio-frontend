@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 import { API_URL } from '../api/api-url';
+import { LOGIN_ENDPOINT } from '../api/auth.api';
 import { isApiRequest } from './auth.interceptor';
 import { AuthService } from './auth.service';
 import { LOGIN_PATH, ROLE_HOME } from './role-home';
@@ -17,7 +18,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
     catchError((error: unknown) => {
       if (error instanceof HttpErrorResponse && isApiRequest(req.url, apiUrl)) {
         const role = auth.role();
-        if (error.status === 401 && !req.url.endsWith('/auth/login')) {
+        if (error.status === 401 && !req.url.endsWith(LOGIN_ENDPOINT)) {
           auth.logout();
           void router.navigateByUrl(LOGIN_PATH);
         } else if (error.status === 403 && role) {

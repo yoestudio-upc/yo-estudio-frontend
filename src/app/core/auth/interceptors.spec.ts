@@ -70,8 +70,8 @@ describe('interceptores', () => {
 
     it('sin sesión no agrega nada', () => {
       setup(null);
-      http.post('/api/auth/login', {}).subscribe();
-      const req = backend.expectOne('/api/auth/login');
+      http.post('/api/auth/sign-in', {}).subscribe();
+      const req = backend.expectOne('/api/auth/sign-in');
       expect(req.request.headers.has('Authorization')).toBe(false);
       req.flush({});
     });
@@ -88,8 +88,8 @@ describe('interceptores', () => {
     it('401 del login: lo deja a la pantalla de ingreso', () => {
       setup(null);
       let status = 0;
-      http.post('/api/auth/login', {}).subscribe({ error: (e) => (status = e.status) });
-      backend.expectOne('/api/auth/login').flush(null, { status: 401, statusText: '401' });
+      http.post('/api/auth/sign-in', {}).subscribe({ error: (e) => (status = e.status) });
+      backend.expectOne('/api/auth/sign-in').flush(null, { status: 401, statusText: '401' });
       expect(status).toBe(401);
       expect(navigate).not.toHaveBeenCalled();
     });

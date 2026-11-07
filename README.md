@@ -11,7 +11,7 @@ Plataforma web que **orienta** el refuerzo de matemática y comunicación en 4.�
 
 ```bash
 npm install
-npm start          # http://localhost:4200 (proxy /api → localhost:8000)
+npm start          # http://localhost:4200 (proxy /api → localhost:8000/api/v1)
 npm test           # Vitest, una pasada: npx ng test --watch=false
 npm run build      # dist/yoestudio/browser (incluye _redirects para Netlify)
 ```
