@@ -80,6 +80,15 @@ describe('TeacherClassHttpApi', () => {
     expect(result).toEqual({ id: '2', name: 'Luis Paz' });
   });
 
+  it('elimina la cuenta de un estudiante del curso', () => {
+    let done = false;
+    api.deleteStudentAccount('3', '5').subscribe(() => (done = true));
+    const req = backend.expectOne('/api/teachers/me/courses/3/students/5');
+    expect(req.request.method).toBe('DELETE');
+    req.flush(null, { status: 204, statusText: 'No Content' });
+    expect(done).toBe(true);
+  });
+
   it('crea el curso con POST /courses', () => {
     let result: TeacherClassSummary | undefined;
     api.create({ subject: 'matematica', grade: 4, section: 'B' }).subscribe((r) => (result = r));

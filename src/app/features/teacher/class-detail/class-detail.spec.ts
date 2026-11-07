@@ -5,6 +5,7 @@ import { Observable, of, throwError } from 'rxjs';
 import { AuthApi } from '../../../core/api/auth.api';
 import { TeacherClassApi } from '../../../core/api/teacher-class.api';
 import { TeacherEvaluationApi } from '../../../core/api/teacher-evaluation.api';
+import { Confirm } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { TeacherClassDetail, TeacherEvaluationSummary } from '../../../core/models/dto/teacher.dto';
 import { ClassDetail } from './class-detail';
 
@@ -43,14 +44,18 @@ const evaluation = (
 
 describe('ClassDetail (D1)', () => {
   let addTeacher: ReturnType<typeof vi.fn>;
+  let deleteStudentAccount: ReturnType<typeof vi.fn>;
+  let confirmAnswer = true;
 
   async function render(getClass: () => Observable<TeacherClassDetail> = () => of(DETAIL)) {
     addTeacher = vi.fn();
+    deleteStudentAccount = vi.fn(() => of(undefined));
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
         { provide: AuthApi, useValue: {} },
-        { provide: TeacherClassApi, useValue: { getClass, addTeacher } },
+        { provide: TeacherClassApi, useValue: { getClass, addTeacher, deleteStudentAccount } },
+        { provide: Confirm, useValue: { ask: vi.fn(() => Promise.resolve(confirmAnswer)) } },
         {
           provide: TeacherEvaluationApi,
           useValue: {
@@ -161,6 +166,26 @@ describe('ClassDetail (D1)', () => {
     await openAddTeacher(el, fixture, '   ');
     expect(addTeacher).not.toHaveBeenCalled();
     expect(el.querySelector('.add-teacher [role="alert"]')?.textContent).toContain('Escribe el usuario');
+  });
+
+  it('elimina la cuenta de un estudiante después de confirmar', async () => {
+    confirmAnswer = true;
+    const { el, fixture } = await render();
+    const button = el.querySelector<HTMLButtonElement>('button[aria-label="Eliminar la cuenta de Alumno 0"]')!;
+    button.click();
+    await fixture.whenStable();
+    expect(TestBed.inject(Confirm).ask).toHaveBeenCalled();
+    expect(deleteStudentAccount).toHaveBeenCalledWith('c-1', 's-0');
+    expect(el.querySelector('.form-notice')?.textContent).toContain('Eliminaste la cuenta de Alumno 0');
+  });
+
+  it('si no confirma, no elimina nada', async () => {
+    confirmAnswer = false;
+    const { el, fixture } = await render();
+    el.querySelector<HTMLButtonElement>('button[aria-label="Eliminar la cuenta de Alumno 1"]')!.click();
+    await fixture.whenStable();
+    expect(deleteStudentAccount).not.toHaveBeenCalled();
+    confirmAnswer = true;
   });
 
   it('muestra el código para unirse', async () => {

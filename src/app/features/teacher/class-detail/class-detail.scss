@@ -157,6 +157,19 @@
   margin-top: var(--space-2);
 }
 
+// HU16 · Eliminar cuenta
+.student-name {
+  flex: 1;
+}
+
+.delete-student {
+  color: var(--text-3);
+
+  &:hover {
+    color: var(--orange-ink);
+  }
+}
+
 // HU12 · Agregar docente
 .add-teacher {
   display: flex;

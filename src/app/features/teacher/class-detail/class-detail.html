@@ -166,10 +166,21 @@
           @for (s of students(); track s.id) {
             <li>
               <ye-avatar [name]="s.name" [tone]="s.tone" size="sm" />
-              {{ s.name }}
+              <span class="student-name">{{ s.name }}</span>
+              <button
+                type="button"
+                class="icon-button delete-student"
+                [attr.aria-label]="'Eliminar la cuenta de ' + s.name"
+                (click)="deleteStudent(s)"
+              >
+                <ye-icon name="trash" [size]="18" />
+              </button>
             </li>
           }
         </ul>
+        @if (deleteError(); as message) {
+          <p class="add-teacher-error" role="alert">{{ message }}</p>
+        }
         @if (hasMoreStudents()) {
           <button
             yeButton

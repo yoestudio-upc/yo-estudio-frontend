@@ -26,6 +26,7 @@ import { topicStyle } from '../../../shared/topic/topic-style';
 import { Avatar, rotatingTone } from '../../../shared/ui/avatar/avatar';
 import { Button } from '../../../shared/ui/button/button';
 import { Card } from '../../../shared/ui/card/card';
+import { Confirm } from '../../../shared/ui/confirm-dialog/confirm-dialog';
 import { Icon } from '../../../shared/ui/icon/icon';
 import { PageHeader } from '../../../shared/ui/page-header/page-header';
 import { StatusBadge } from '../../../shared/ui/status-badge/status-badge';
@@ -51,6 +52,7 @@ const STUDENTS_PREVIEW = 8;
 export class ClassDetail {
   private readonly classApi = inject(TeacherClassApi);
   private readonly evaluationApi = inject(TeacherEvaluationApi);
+  private readonly confirm = inject(Confirm);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly injector = inject(Injector);
 
@@ -159,6 +161,29 @@ export class ClassDetail {
       );
     } finally {
       this.teacherBusy.set(false);
+    }
+  }
+
+  // HU16 · Eliminar la cuenta de un estudiante (pide confirmación)
+  protected readonly deleteError = signal<string | null>(null);
+
+  protected async deleteStudent(student: { id: string; name: string }): Promise<void> {
+    const confirmed = await this.confirm.ask({
+      title: `¿Eliminar la cuenta de ${student.name}?`,
+      message:
+        'Se borran su usuario y sus datos personales, también en otros cursos. Sus respuestas ' +
+        'quedan sin nombre para mejorar las recomendaciones. No se puede deshacer.',
+      confirmLabel: 'Eliminar cuenta',
+      destructive: true,
+    });
+    if (!confirmed) return;
+    this.deleteError.set(null);
+    try {
+      await firstValueFrom(this.classApi.deleteStudentAccount(this.classId(), student.id));
+      this.notice.set(`Eliminaste la cuenta de ${student.name}.`);
+      this.detail.reload();
+    } catch {
+      this.deleteError.set(`No pudimos eliminar la cuenta de ${student.name}. Intenta otra vez.`);
     }
   }
 

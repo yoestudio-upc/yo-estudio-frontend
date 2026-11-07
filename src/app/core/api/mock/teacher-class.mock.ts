@@ -53,6 +53,17 @@ export class TeacherClassMockApi extends TeacherClassApi {
     return respond(added);
   }
 
+  // El mock solo lo saca de todos los cursos: no maneja cuentas ni anonimización
+  deleteStudentAccount(classId: string, studentId: string): Observable<void> {
+    const found = this.ownClasses().find((c) => c.id === classId);
+    if (!found || !found.studentIds.includes(studentId)) return fail(404);
+    for (const c of this.db.classes) {
+      c.studentIds = c.studentIds.filter((id) => id !== studentId);
+    }
+    this.db.save();
+    return respond(undefined);
+  }
+
   private teachersOf(c: MockDb['classes'][number]): TeacherRef[] {
     const owner = this.db.teachers.find((t) => t.id === c.teacherId);
     return [...(owner ? [{ id: owner.id, name: owner.name }] : []), ...(this.coTeachers.get(c.id) ?? [])];

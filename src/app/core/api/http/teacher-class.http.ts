@@ -52,6 +52,10 @@ export class TeacherClassHttpApi extends TeacherClassApi {
       .pipe(map((t) => ({ id: String(t.id), name: t.name })));
   }
 
+  deleteStudentAccount(classId: string, studentId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/teachers/me/courses/${classId}/students/${studentId}`);
+  }
+
   create(request: CreateClassRequest): Observable<TeacherClassSummary> {
     return this.http
       .post<BackendTeacherCourse>(`${this.apiUrl}/courses`, request)

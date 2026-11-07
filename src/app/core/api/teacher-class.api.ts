@@ -15,4 +15,6 @@ export abstract class TeacherClassApi {
   // HU12: agrega otra cuenta docente al curso. 404 = no existe, 409 = ya es docente,
   // 422 { problems } = no es una cuenta docente
   abstract addTeacher(classId: string, username: string): Observable<TeacherRef>;
+  // HU16: borra la cuenta del estudiante; sus datos académicos quedan anónimos
+  abstract deleteStudentAccount(classId: string, studentId: string): Observable<void>;
 }
