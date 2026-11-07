@@ -1,0 +1,9 @@
+@use 'styles/tokens';
+@use 'styles/base';
+@use 'styles/forms';
+@use 'styles/utilities';
+
+// Fondo de los diálogos del CDK (el overlay-prebuilt.css se carga en angular.json)
+.cdk-overlay-dark-backdrop {
+  background: rgba(15, 30, 74, 0.45);
+}

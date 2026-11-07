@@ -1,0 +1,34 @@
+<nav class="panel" aria-label="Menú principal">
+  <div class="brand">
+    <ye-yoyo pose="mark" [size]="34" />
+    <span class="brand-name label">YoEstudio</span>
+  </div>
+
+  <ul class="items" role="list">
+    @for (item of items(); track item.path) {
+      <li>
+        <a
+          class="item"
+          [routerLink]="item.path"
+          [class.is-active]="isActive(item)"
+          [attr.aria-current]="isActive(item) ? 'page' : null"
+        >
+          <span class="bubble" [class]="'bubble--' + item.tone">
+            <ye-icon [name]="item.icon" [size]="20" />
+          </span>
+          <span class="label">{{ item.label }}</span>
+        </a>
+      </li>
+    }
+  </ul>
+
+  <div class="footer">
+    <ye-user-card class="user" [name]="userName()" [detail]="userDetail()" [tone]="userTone()" />
+    <button type="button" class="item item--exit" (click)="logout.emit()">
+      <span class="bubble bubble--neutral">
+        <ye-icon name="logout" [size]="20" />
+      </span>
+      <span class="label">Salir</span>
+    </button>
+  </div>
+</nav>

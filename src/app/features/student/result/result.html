@@ -1,0 +1,54 @@
+@if (result.isLoading() && !result.hasValue()) {
+  <p class="state" role="status">Cargando tu resultado…</p>
+} @else if (result.error()) {
+  <div yeCard class="state state--error" role="alert">
+    <p>No encontramos este resultado.</p>
+    <a yeButton variant="outline" size="sm" routerLink="/estudiante/cursos">Volver a mis cursos</a>
+  </div>
+} @else if (result.value(); as r) {
+  <section yeCard radius="lg" class="page">
+    <div class="hero">
+      <ye-yoyo pose="happy" [size]="170" />
+      <div class="hero-text">
+        <span class="topic">
+          <ye-icon [name]="topicIcon()" [size]="18" />
+          Tema: {{ r.topic.name }}
+        </span>
+        <h1>¡Terminaste la evaluación!</h1>
+        <p class="summary">{{ summary() }}</p>
+      </div>
+    </div>
+
+    <section class="subtopics" aria-labelledby="subtopics-title">
+      <h2 id="subtopics-title">Así te fue en cada subtema de {{ r.topic.name }}</h2>
+      <ul class="grid" role="list">
+        @for (s of r.subtopics; track s.id) {
+          <li class="subtopic">
+            <div class="subtopic-text">
+              <p class="subtopic-name">{{ s.name }}</p>
+              <p class="cheer" [class]="'cheer level-' + s.level">{{ cheer[s.level] }}</p>
+            </div>
+            <ye-star-level [level]="s.level" [size]="28" [showLabel]="false" />
+          </li>
+        }
+      </ul>
+    </section>
+
+    <section class="goals" aria-labelledby="goals-title">
+      <span class="goals-icon"><ye-icon name="flag" [size]="28" /></span>
+      <div class="goals-text">
+        <h2 id="goals-title">Yoyo preparó nuevas metas para ti</h2>
+        <p>Te dice qué subtema practicar primero y cómo hacerlo.</p>
+      </div>
+      <div class="goals-actions">
+        <a yeButton variant="on-brand" [routerLink]="['/estudiante/cursos', r.classId]">
+          Volver a evaluaciones
+        </a>
+        <a yeButton variant="white" class="to-goals" routerLink="/estudiante/metas">
+          Ver mis metas
+          <ye-icon name="arrow-right" [size]="20" />
+        </a>
+      </div>
+    </section>
+  </section>
+}

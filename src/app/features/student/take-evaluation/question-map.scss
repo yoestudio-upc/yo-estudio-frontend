@@ -1,0 +1,74 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+h2 {
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.dot {
+  width: 100%;
+  min-width: var(--tap-min);
+  height: var(--tap-min);
+  border-radius: var(--radius-pill);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.answered {
+  border: none;
+  background: var(--brand);
+  color: var(--surface);
+}
+
+.later {
+  border: 2px dashed var(--later-dashed);
+  background: var(--orange-soft);
+  color: var(--orange-ink);
+}
+
+.unseen {
+  border: 2px solid var(--track);
+  background: var(--surface-alt);
+  color: var(--text-3);
+}
+
+// La actual se marca con borde naranja (sobre cualquier estado)
+.dot.current {
+  border: 3px solid var(--orange);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-2);
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+}
+
+.key {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}

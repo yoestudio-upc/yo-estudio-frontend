@@ -1,0 +1,40 @@
+:host {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  font-weight: 800;
+}
+
+:host(.size-md) {
+  width: 44px;
+  height: 44px;
+  font-size: 17px;
+}
+
+:host(.size-sm) {
+  width: 38px;
+  height: 38px;
+  font-size: 14px;
+}
+
+:host(.tone-orange) {
+  background: var(--avatar-bg);
+  color: var(--avatar-ink);
+}
+
+:host(.tone-blue) {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+:host(.tone-green) {
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+:host(.tone-yellow) {
+  background: var(--yellow-bg);
+  color: var(--yellow-ink);
+}

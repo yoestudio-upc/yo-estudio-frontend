@@ -1,0 +1,356 @@
+// Pantalla completa, sin barra lateral
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  min-height: 100vh;
+  padding: var(--page-pad);
+}
+
+// Cabecera
+.top {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr) 250px;
+  align-items: center;
+  gap: var(--space-4);
+  min-height: 84px;
+  padding: 10px var(--space-6);
+}
+
+.exit {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-self: start;
+  min-height: 48px;
+  padding: 0 var(--space-2) 0 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: none;
+  color: var(--text-2);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.exit-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--surface-alt);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 40px;
+  padding: 0 var(--space-4);
+  border-radius: var(--radius-pill);
+  background: var(--surface-alt);
+  color: var(--text-2);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.chip--topic {
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-weight: 800;
+}
+
+.progress {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-2);
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.bar {
+  width: 100%;
+  height: 14px;
+  overflow: hidden;
+  border-radius: 7px;
+  background: var(--track);
+
+  span {
+    display: block;
+    height: 100%;
+    border-radius: 7px;
+    background: var(--orange);
+    transition: width 200ms ease;
+  }
+}
+
+// Cuerpo
+.body {
+  display: grid;
+  flex-grow: 1;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: var(--space-5);
+}
+
+.question-card {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: var(--space-7) var(--space-8);
+}
+
+.reading {
+  border-left: 5px solid var(--orange);
+  border-radius: 16px;
+  background: var(--orange-soft);
+
+  summary {
+    display: flex;
+    align-items: center;
+    min-height: var(--tap-min);
+    padding: 0 18px;
+    border-radius: 16px;
+    color: var(--orange-ink);
+    font-size: 18px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  p {
+    padding: 0 18px 18px;
+    font-size: 20px;
+    line-height: 1.55;
+  }
+}
+
+.question-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+
+  h2 {
+    font-size: 27px;
+    font-weight: 700;
+    line-height: 1.35;
+
+    &:focus {
+      box-shadow: none;
+    }
+  }
+}
+
+// Contraste AA: texto oscuro sobre naranja
+.number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--orange);
+  color: var(--text);
+  font-size: var(--fs-title-sm);
+  font-weight: 800;
+}
+
+.options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  min-height: 78px;
+  padding: var(--space-3) 22px;
+  border: 3px solid var(--track);
+  border-radius: var(--space-6);
+  background: var(--surface);
+  box-shadow: 0 4px 0 var(--track);
+  font-size: 28px;
+  font-weight: 700;
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--dashed);
+  }
+
+  &:has(:focus-visible) {
+    box-shadow:
+      0 4px 0 var(--track),
+      var(--focus-ring);
+  }
+
+  &.long {
+    font-size: var(--fs-body-lg);
+  }
+
+  &.chosen {
+    border: 4px solid var(--brand);
+    background: var(--chip-blue);
+    box-shadow: 0 4px 0 var(--brand);
+    font-weight: 800;
+
+    .letter {
+      background: var(--brand);
+      color: var(--surface);
+    }
+  }
+}
+
+.option-text {
+  flex-grow: 1;
+  line-height: 1.25;
+}
+
+.letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  font-size: 21px;
+  font-weight: 800;
+}
+
+@each $tone in 'blue', 'orange', 'green', 'yellow' {
+  .tone-#{$tone} {
+    background: var(--tone-#{$tone}-bg);
+    color: var(--tone-#{$tone}-ink);
+  }
+}
+
+.chosen-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: var(--radius-pill);
+  background: var(--brand);
+  color: var(--surface);
+  font-size: var(--fs-body-sm);
+  font-weight: 800;
+}
+
+.hint {
+  font-weight: 700;
+  color: var(--green);
+
+  &:empty {
+    display: none;
+  }
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: auto;
+
+  [yeButton] {
+    min-height: 58px;
+    font-size: 19px;
+  }
+}
+
+.nav-right {
+  display: flex;
+  gap: 14px;
+}
+
+// Panel derecho
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.tip {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 18px var(--space-5);
+
+  p {
+    padding-bottom: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: var(--text-2);
+  }
+}
+
+.map-card {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  gap: var(--space-4);
+  padding: var(--space-6) 22px;
+}
+
+.finish {
+  margin-top: auto;
+}
+
+.state {
+  margin: var(--space-6);
+  padding: var(--space-5);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-3);
+}
+
+.state--error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  color: var(--orange-ink);
+}
+
+@media (max-width: 1199px) {
+  .top {
+    grid-template-columns: auto minmax(0, 1fr) 200px;
+  }
+
+  .body {
+    grid-template-columns: minmax(0, 1fr) 260px;
+  }
+
+  .question-card {
+    padding: var(--space-6);
+  }
+
+  .question-head h2 {
+    font-size: var(--fs-title-sm);
+  }
+
+  .option {
+    font-size: var(--fs-title-sm);
+  }
+
+  .nav [yeButton] {
+    padding: 0 var(--space-4);
+    font-size: 17px;
+  }
+}

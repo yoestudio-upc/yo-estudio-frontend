@@ -1,0 +1,64 @@
+<div class="page">
+  <ye-page-header
+    heading="Cursos"
+    subtitle="Elige un curso para ver sus evaluaciones."
+    yoyo="wave"
+  />
+
+  <div class="toolbar">
+    <!-- HU09 (Sprint 3): visible pero aún no disponible -->
+    <button yeButton type="button" class="create" aria-disabled="true" (click)="showSoon.set(true)">
+      <ye-icon name="plus" [size]="22" />
+      Crear nuevo curso
+      <span class="soon-tag">Pronto</span>
+    </button>
+    <ye-search-box placeholder="Buscar un curso" (query)="query.set($event)" />
+  </div>
+
+  <p class="soon-hint" role="status">
+    @if (showSoon()) {
+      Muy pronto podrás crear cursos desde aquí.
+    }
+  </p>
+
+  @if (classes.isLoading()) {
+    <p class="state" role="status">Cargando tus cursos…</p>
+  } @else if (classes.error()) {
+    <div yeCard class="state state--error" role="alert">
+      <p>No pudimos cargar tus cursos.</p>
+      <button yeButton variant="outline" size="sm" type="button" (click)="classes.reload()">
+        Intentar otra vez
+      </button>
+    </div>
+  } @else {
+    <ul class="list" role="list">
+      @for (c of items(); track c.id) {
+        <li>
+          <ye-class-card
+            [label]="c.label"
+            [subject]="c.subject"
+            [topics]="c.topics"
+            [meta]="c.studentCount + ' estudiantes'"
+          >
+            <span class="code"
+              >Código: <strong>{{ c.joinCode }}</strong></span
+            >
+            <a yeButton [routerLink]="['/docente/cursos', c.id]">
+              Acceder al curso
+              <span class="visually-hidden">{{ c.label }}</span>
+              <ye-icon name="arrow-right" [size]="20" />
+            </a>
+          </ye-class-card>
+        </li>
+      } @empty {
+        <li class="state">
+          @if (query()) {
+            No encontramos cursos con «{{ query() }}».
+          } @else {
+            Aún no tienes cursos.
+          }
+        </li>
+      }
+    </ul>
+  }
+</div>

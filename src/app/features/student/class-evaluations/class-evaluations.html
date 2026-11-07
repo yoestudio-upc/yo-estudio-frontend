@@ -1,0 +1,124 @@
+@if (overview.isLoading() && !overview.hasValue()) {
+  <p class="state" role="status">Cargando…</p>
+} @else if (overview.error()) {
+  <div yeCard class="state state--error" role="alert">
+    <p>{{ notFound() ? 'No encontramos este curso.' : 'No pudimos cargar el curso.' }}</p>
+    <a yeButton variant="outline" size="sm" routerLink="/estudiante/cursos">Volver a mis cursos</a>
+  </div>
+} @else if (overview.value(); as o) {
+  <div class="page">
+    <ye-page-header
+      yoyo="wave"
+      [heading]="greeting()"
+      [subtitle]="subtitle()"
+      [crumbs]="[{ label: 'Cursos', link: '/estudiante/cursos' }, { label: label() }]"
+    >
+      <p headerAside class="today">{{ today }}</p>
+    </ye-page-header>
+
+    <div class="columns">
+      <section class="evaluations" aria-labelledby="evaluations-title">
+        <h2 id="evaluations-title" class="section-title">Evaluaciones del curso</h2>
+
+        <ul class="list" role="list">
+          @for (e of pending(); track e.id) {
+            <li yeCard class="evaluation">
+              <div class="evaluation-head">
+                <span class="topic-icon" [class]="'tone-' + e.style.tone">
+                  <ye-icon [name]="e.style.icon" [size]="32" />
+                </span>
+                <div>
+                  <p class="topic-label" [class]="'ink-' + e.style.tone">Tema</p>
+                  <h3>{{ e.topic.name }}</h3>
+                </div>
+              </div>
+              <div class="subtopics">
+                <span class="subtopics-label">Subtemas:</span>
+                @for (s of e.subtopics; track s.id) {
+                  <ye-chip [tone]="e.style.tone">{{ s.name }}</ye-chip>
+                }
+              </div>
+              <div class="evaluation-foot">
+                <span class="fact">
+                  <ye-icon name="help" [size]="20" />
+                  {{ e.questionCount }} preguntas
+                </span>
+                @if (e.due) {
+                  <span class="fact">
+                    <ye-icon name="calendar" [size]="20" />
+                    {{ e.due }}
+                  </span>
+                }
+                <a yeButton class="start" [routerLink]="['/estudiante/evaluaciones', e.id]">
+                  <ye-icon name="play" [size]="20" />
+                  {{ e.inProgress ? 'Continuar' : '¡Empezar!' }}
+                  <span class="visually-hidden"> {{ e.name }}</span>
+                </a>
+              </div>
+            </li>
+          } @empty {
+            <li yeCard class="empty">
+              ¡Muy bien! No tienes evaluaciones por resolver. Cuando tu profe publique una, la verás
+              aquí.
+            </li>
+          }
+        </ul>
+
+        @if (o.done.length) {
+          <h2 class="section-title section-title--small">Ya las resolviste</h2>
+          <ul class="done" role="list">
+            @for (e of o.done; track e.id) {
+              <li class="done-row">
+                <span>{{ e.name }}</span>
+                <a
+                  yeButton
+                  variant="outline"
+                  size="sm"
+                  [routerLink]="['/estudiante/evaluaciones', e.id, 'resultado']"
+                >
+                  Ver resultado<span class="visually-hidden"> de {{ e.name }}</span>
+                </a>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <aside class="side">
+        <section yeCard variant="goal" class="goal" aria-labelledby="goal-title">
+          <p id="goal-title" class="goal-title">
+            <ye-icon name="flag" [size]="22" />
+            Tu próxima meta
+          </p>
+          @if (o.nextGoal; as goal) {
+            <p class="goal-name">{{ goal.name }}</p>
+            <p class="goal-topic">Subtema del tema {{ goal.topicName }}</p>
+            <ye-star-level [level]="goal.level" />
+          } @else {
+            <p class="goal-empty">
+              Cuando resuelvas tu primera evaluación, Yoyo te propondrá una meta.
+            </p>
+          }
+          <a yeButton variant="white" size="sm" class="goal-link" routerLink="/estudiante/metas">
+            Ver mis metas
+          </a>
+        </section>
+
+        <section yeCard class="progress" aria-labelledby="progress-title">
+          <p class="progress-head">
+            <span class="trophy"><ye-icon name="trophy" [size]="26" /></span>
+            <span id="progress-title">Tu avance</span>
+          </p>
+          <p class="achieved">
+            <span class="achieved-number">{{ o.achievedCount }}</span>
+            {{ o.achievedCount === 1 ? 'subtema logrado' : 'subtemas logrados' }} en este curso
+          </p>
+          @if (o.lastEvaluationName) {
+            <p class="last">Última evaluación: {{ o.lastEvaluationName }}</p>
+          }
+          <a class="progress-link" routerLink="/estudiante/avance">Ver mi avance →</a>
+        </section>
+      </aside>
+    </div>
+  </div>
+}

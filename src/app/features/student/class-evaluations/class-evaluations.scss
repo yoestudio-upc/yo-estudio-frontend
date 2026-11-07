@@ -1,0 +1,276 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.today {
+  padding: 10px var(--space-4);
+  border-radius: 18px;
+  background: var(--surface-alt);
+  color: var(--text-2);
+  font-weight: 700;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 330px;
+  align-items: start;
+  gap: var(--space-5);
+}
+
+.evaluations {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.section-title {
+  padding-left: var(--space-2);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.section-title--small {
+  margin-top: var(--space-2);
+  font-size: 18px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0;
+}
+
+.evaluation {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5) var(--space-6);
+}
+
+.evaluation-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+
+  h3 {
+    font-size: 25px;
+    font-weight: 800;
+  }
+}
+
+.topic-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  border-radius: var(--space-5);
+}
+
+.topic-label {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+@each $tone in 'blue', 'green', 'yellow', 'orange' {
+  .tone-#{$tone} {
+    background: var(--tone-#{$tone}-bg);
+    color: var(--tone-#{$tone}-ink);
+  }
+
+  .ink-#{$tone} {
+    color: var(--tone-#{$tone}-ink);
+  }
+}
+
+.subtopics {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.subtopics-label {
+  font-size: var(--fs-body-sm);
+  font-weight: 700;
+  color: var(--text-3);
+}
+
+.evaluation-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) 18px;
+}
+
+.fact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: 16px;
+  color: var(--text-3);
+}
+
+.start {
+  margin-left: auto;
+  font-size: 19px;
+}
+
+.empty {
+  padding: var(--space-6);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.done {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.done-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 10px var(--space-3) 10px var(--space-5);
+  border-radius: 18px;
+  background: var(--surface);
+  font-weight: 700;
+}
+
+.side {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.goal {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--space-6);
+}
+
+.goal-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--fs-body-sm);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--yellow-ink);
+}
+
+.goal-name {
+  font-family: var(--font-display);
+  font-size: 27px;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.goal-topic {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.goal-empty {
+  font-weight: 600;
+}
+
+.goal-link {
+  align-self: flex-start;
+  margin-top: var(--space-1);
+  color: var(--goal-ink);
+}
+
+.progress {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--space-6);
+}
+
+.progress-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.trophy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+.achieved {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+.achieved-number {
+  font-family: var(--font-display);
+  font-size: 44px;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+.last {
+  font-size: var(--fs-body-sm);
+  color: var(--text-3);
+}
+
+.progress-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--tap-min);
+  font-size: 17px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.state {
+  padding: var(--space-5);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-3);
+}
+
+.state--error {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  color: var(--orange-ink);
+}
+
+@media (max-width: 1099px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr) 270px;
+  }
+
+  .evaluation {
+    padding: var(--space-5);
+  }
+}

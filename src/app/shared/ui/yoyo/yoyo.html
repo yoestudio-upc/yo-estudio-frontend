@@ -1,0 +1,104 @@
+<svg [attr.width]="size()" [attr.height]="height()" [attr.viewBox]="viewBox()" focusable="false">
+  @if (happy()) {
+    <g class="confetti">
+      <circle cx="-2" cy="20" r="4" class="c-orange" />
+      <rect
+        x="118"
+        y="14"
+        width="8"
+        height="8"
+        rx="2"
+        class="c-star"
+        transform="rotate(20 122 18)"
+      />
+      <circle cx="124" cy="96" r="4" class="c-blue" />
+      <rect
+        x="-6"
+        y="92"
+        width="8"
+        height="8"
+        rx="2"
+        class="c-green"
+        transform="rotate(-20 -2 96)"
+      />
+      <path d="M60 -2l2 5 5 1-4 3 1 5-4-3-4 3 1-5-4-3 5-1z" class="c-star" />
+    </g>
+  }
+
+  <!-- Orejas -->
+  <path d="M26 34 L34 8 L50 26 Z" class="deep" />
+  <path d="M94 34 L86 8 L70 26 Z" class="deep" />
+
+  <!-- Alas -->
+  @if (pose() !== 'mark') {
+    @if (happy()) {
+      <ellipse cx="16" cy="50" rx="9" ry="21" class="deep" transform="rotate(-38 16 50)" />
+    } @else {
+      <ellipse cx="18" cy="80" rx="10" ry="22" class="deep" transform="rotate(14 18 80)" />
+    }
+    @if (raisedWing()) {
+      <ellipse cx="104" cy="50" rx="9" ry="21" class="deep" transform="rotate(38 104 50)" />
+    } @else {
+      <ellipse cx="102" cy="80" rx="10" ry="22" class="deep" transform="rotate(-14 102 80)" />
+    }
+  }
+
+  <!-- Cuerpo y panza -->
+  <ellipse cx="60" cy="72" rx="42" ry="46" class="body" />
+  <ellipse cx="60" cy="86" rx="27" ry="28" class="belly" />
+  @if (pose() === 'wave') {
+    <path d="M49 84q5.5 4 11 0q5.5 4 11 0M45 96q7.5 5 15 0q7.5 5 15 0" class="feathers" />
+  }
+  @if (happy()) {
+    <path d="M49 88q5.5 4 11 0q5.5 4 11 0M45 100q7.5 5 15 0q7.5 5 15 0" class="feathers" />
+  }
+
+  <!-- Ojos -->
+  @if (!happy()) {
+    <circle cx="43" cy="54" r="15" class="eye-white" />
+    <circle cx="77" cy="54" r="15" class="eye-white" />
+    <circle [attr.cx]="pupils().left[0]" [attr.cy]="pupils().left[1]" r="7" class="pupil" />
+    <circle [attr.cx]="pupils().right[0]" [attr.cy]="pupils().right[1]" r="7" class="pupil" />
+    @if (pupils().shine) {
+      <circle
+        [attr.cx]="pupils().left[0] + 2.5"
+        [attr.cy]="pupils().left[1] - 3"
+        r="2.4"
+        class="eye-white"
+      />
+      <circle
+        [attr.cx]="pupils().right[0] + 2.5"
+        [attr.cy]="pupils().right[1] - 3"
+        r="2.4"
+        class="eye-white"
+      />
+    }
+    @if (pose() === 'thinking') {
+      <path d="M28 44q15-8 30 0M62 44q15-8 30 0" class="body" />
+    }
+  }
+  @if (happy()) {
+    <path d="M34 57q9-10 18 0M68 57q9-10 18 0" class="happy-eyes" />
+  }
+
+  <!-- Pico -->
+  @if (happy()) {
+    <path d="M53 66 L67 66 L60 77 Z" class="beak" />
+  } @else {
+    <path d="M54 66 L66 66 L60 75 Z" class="beak" />
+  }
+
+  <!-- Mejillas -->
+  @if (happy()) {
+    <ellipse cx="30" cy="68" rx="6" ry="4" class="cheek" />
+    <ellipse cx="90" cy="68" rx="6" ry="4" class="cheek" />
+  } @else if (pose() !== 'thinking' && pose() !== 'mark') {
+    <ellipse cx="30" cy="70" rx="5" ry="3.5" class="cheek" />
+    <ellipse cx="90" cy="70" rx="5" ry="3.5" class="cheek" />
+  }
+
+  <!-- Patas -->
+  @if (pose() !== 'mark') {
+    <path d="M47 117v7M43 117l-3 6M51 117l3 6M73 117v7M69 117l-3 6M77 117l3 6" class="feet" />
+  }
+</svg>

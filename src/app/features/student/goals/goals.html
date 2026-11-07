@@ -1,0 +1,87 @@
+<div class="page">
+  <ye-page-header
+    heading="Mis metas"
+    subtitle="Yoyo te preparó este camino. ¡Empieza por la meta 1!"
+    yoyo="look"
+  />
+
+  @if (goals.isLoading() && !goals.hasValue()) {
+    <p class="state" role="status">Cargando tus metas…</p>
+  } @else if (goals.error()) {
+    <div yeCard class="state state--error" role="alert">
+      <p>No pudimos cargar tus metas.</p>
+      <button yeButton variant="outline" size="sm" type="button" (click)="goals.reload()">
+        Intentar otra vez
+      </button>
+    </div>
+  } @else if (!main().length) {
+    <div yeCard class="state">
+      Por ahora no tienes metas. Cuando resuelvas una evaluación, Yoyo te dirá qué practicar.
+    </div>
+  } @else {
+    <ol class="goals" role="list">
+      @for (g of main(); track g.subtopic.id; let first = $first; let last = $last) {
+        <li yeCard [variant]="first ? 'highlight' : 'default'" class="goal">
+          <div class="goal-head">
+            <span class="number" [class.number--first]="first">
+              <span class="visually-hidden">Meta </span>{{ g.priority }}
+            </span>
+            @if (first) {
+              <span class="start-here">¡Empieza aquí!</span>
+            }
+          </div>
+          <span class="topic" [class]="'topic tone-' + g.style.tone">
+            <ye-icon [name]="g.style.icon" [size]="16" />
+            Tema: {{ g.topic.name }}
+          </span>
+          <h2>{{ g.subtopic.name }}</h2>
+          <p class="so-far">Vas así: <ye-star-level [level]="g.level" [size]="22" /></p>
+          <div class="practice">
+            <p class="practice-title">
+              <ye-icon [name]="g.practiceIcon" [size]="22" />
+              Cómo practicar
+            </p>
+            <p>{{ g.practice.text }}</p>
+          </div>
+        </li>
+        @if (!last) {
+          <li class="arrow" aria-hidden="true">
+            <ye-icon name="chevron-right" [size]="22" />
+          </li>
+        }
+      }
+    </ol>
+
+    @if (later().length) {
+      <section yeCard class="later" aria-labelledby="later-title">
+        <h2 id="later-title">Después vienen</h2>
+        <ol role="list">
+          @for (g of later(); track g.subtopic.id) {
+            <li>
+              <span class="later-number">{{ g.priority }}</span>
+              {{ g.subtopic.name }} <span class="later-topic">· {{ g.topic.name }}</span>
+            </li>
+          }
+        </ol>
+      </section>
+    }
+  }
+
+  <section yeCard class="how" aria-labelledby="how-title">
+    <h2 id="how-title">¿Cómo lo hago?</h2>
+    <ul role="list">
+      <li>
+        <span class="how-icon tone-blue"><ye-icon name="pencil" [size]="20" /></span>
+        Practica en tu cuaderno o con las fichas de tu profe.
+      </li>
+      <li>
+        <span class="how-icon tone-green"><ye-icon name="refresh" [size]="20" /></span>
+        En tu próxima evaluación tus metas se actualizan.
+      </li>
+      <li>
+        <span class="how-icon tone-yellow"><ye-icon name="help" [size]="20" /></span>
+        Si algo no te sale, pregúntale a tu profe.
+      </li>
+    </ul>
+  </section>
+</div>

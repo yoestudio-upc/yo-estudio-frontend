@@ -1,0 +1,66 @@
+<div class="page">
+  <ye-page-header heading="Perfil" subtitle="Tu cuenta en YoEstudio." yoyo="wave" />
+
+  <div class="columns">
+    <section yeCard class="account" aria-labelledby="account-title">
+      <div class="who">
+        <ye-avatar [name]="user()?.name ?? ''" tone="green" />
+        <div>
+          <h2 id="account-title">{{ user()?.name }}</h2>
+          <p class="muted">Docente</p>
+        </div>
+      </div>
+      <p class="muted">
+        Para cambiar tu contraseña o tus datos, por ahora pídelo al administrador del colegio.
+      </p>
+      <button yeButton variant="outline" size="sm" type="button" class="logout" (click)="logout()">
+        <ye-icon name="logout" [size]="20" />
+        Cerrar sesión
+      </button>
+    </section>
+
+    <section yeCard class="courses" aria-labelledby="courses-title">
+      <h2 id="courses-title">Tus cursos</h2>
+      @if (classes.isLoading() && !classes.hasValue()) {
+        <p class="muted" role="status">Cargando…</p>
+      } @else if (classes.error()) {
+        <p class="muted" role="alert">No pudimos cargar tus cursos.</p>
+      } @else {
+        <ul role="list">
+          @for (c of classes.value() ?? []; track c.id) {
+            <li>
+              <div>
+                <p class="course-name">{{ label(c) }}</p>
+                <p class="muted">
+                  {{ c.studentCount }} estudiantes · Código para unirse:
+                  <strong class="code">{{ c.joinCode }}</strong>
+                </p>
+              </div>
+              <a yeButton variant="soft" size="sm" [routerLink]="['/docente/cursos', c.id]">
+                Ver curso<span class="visually-hidden"> {{ label(c) }}</span>
+              </a>
+            </li>
+          } @empty {
+            <li class="muted">Aún no tienes cursos.</li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+
+  @if (demo) {
+    <section yeCard variant="soft" class="demo" aria-labelledby="demo-title">
+      <div>
+        <h2 id="demo-title">Datos de prueba</h2>
+        <p class="muted">
+          Mientras no haya backend, lo que se crea queda guardado en este navegador. Para empezar
+          una sesión de prueba desde cero, restablece los datos de ejemplo.
+        </p>
+      </div>
+      <button yeButton variant="outline" size="sm" type="button" (click)="resetDemo()">
+        <ye-icon name="refresh" [size]="20" />
+        Restablecer datos de ejemplo
+      </button>
+    </section>
+  }
+</div>

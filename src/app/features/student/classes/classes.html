@@ -1,0 +1,105 @@
+<div class="page">
+  <ye-page-header
+    heading="Cursos"
+    subtitle="Elige un curso para ver sus evaluaciones."
+    yoyo="wave"
+  />
+
+  <div class="toolbar">
+    <button
+      yeButton
+      type="button"
+      class="join-toggle"
+      aria-controls="join-panel"
+      [attr.aria-expanded]="joining()"
+      (click)="joining() ? closeJoin() : openJoin()"
+    >
+      <ye-icon name="plus" [size]="22" />
+      Unirme a un curso
+    </button>
+    <ye-search-box placeholder="Buscar un curso" (query)="query.set($event)" />
+  </div>
+
+  @if (joining()) {
+    <form
+      id="join-panel"
+      yeCard
+      class="join"
+      (ngSubmit)="join()"
+      novalidate
+      aria-labelledby="join-title"
+    >
+      <div class="join-text">
+        <h2 id="join-title">Unirme a un curso</h2>
+        <p>Escribe el código que te dio tu profe.</p>
+      </div>
+      <label class="visually-hidden" for="join-code">Código del curso</label>
+      <input
+        id="join-code"
+        class="form-control code-input"
+        name="code"
+        autocomplete="off"
+        autocapitalize="characters"
+        spellcheck="false"
+        maxlength="12"
+        placeholder="Ej. K7P2QX"
+        [attr.aria-invalid]="joinError() ? 'true' : null"
+        [attr.aria-describedby]="joinError() ? 'join-error' : null"
+        [ngModel]="code()"
+        (ngModelChange)="code.set($event)"
+      />
+      <button yeButton type="submit" [attr.aria-busy]="joinBusy() || null">Unirme</button>
+      <button yeButton variant="white" type="button" (click)="closeJoin()">Cancelar</button>
+      @if (joinError(); as message) {
+        <p id="join-error" class="join-error" role="alert">{{ message }}</p>
+      }
+    </form>
+  }
+
+  @if (notice(); as message) {
+    <p class="form-notice" role="status">{{ message }}</p>
+  }
+
+  @if (classes.isLoading() && !classes.hasValue()) {
+    <p class="state" role="status">Cargando tus cursos…</p>
+  } @else if (classes.error()) {
+    <div yeCard class="state state--error" role="alert">
+      <p>No pudimos cargar tus cursos.</p>
+      <button yeButton variant="outline" size="sm" type="button" (click)="classes.reload()">
+        Intentar otra vez
+      </button>
+    </div>
+  } @else {
+    <ul class="list" role="list">
+      @for (c of items(); track c.id) {
+        <li>
+          <ye-class-card
+            [label]="c.label"
+            [subject]="c.subject"
+            [topics]="c.topics"
+            [meta]="'Prof. ' + c.teacherName"
+          >
+            @if (c.pendingCount) {
+              <span class="pending">{{ pendingLabel(c.pendingCount) }}</span>
+            } @else {
+              <span class="pending pending--done">¡Estás al día!</span>
+            }
+            <a yeButton [routerLink]="['/estudiante/cursos', c.id]">
+              Acceder al curso
+              <span class="visually-hidden">{{ c.label }}</span>
+              <ye-icon name="arrow-right" [size]="20" />
+            </a>
+          </ye-class-card>
+        </li>
+      } @empty {
+        <li class="state">
+          @if (query()) {
+            No encontramos cursos con «{{ query() }}».
+          } @else {
+            Todavía no estás en ningún curso. Pídele el código a tu profe y únete.
+          }
+        </li>
+      }
+    </ul>
+  }
+</div>

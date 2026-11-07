@@ -1,0 +1,46 @@
+:host {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  gap: var(--page-pad);
+  min-height: 100vh;
+  padding: var(--page-pad);
+}
+
+.sidebar {
+  position: sticky;
+  top: var(--page-pad);
+  height: calc(100vh - 2 * var(--page-pad));
+}
+
+.content {
+  min-width: 0;
+
+  &:focus {
+    box-shadow: none;
+  }
+}
+
+// Visible solo al recibir foco con teclado
+.skip-link {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 10;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-pill);
+  background: var(--brand);
+  color: var(--surface);
+  font-weight: 800;
+  text-decoration: none;
+  transform: translateY(-200%);
+
+  &:focus-visible {
+    transform: none;
+  }
+}
+
+@media (max-width: 1099px) {
+  :host {
+    grid-template-columns: var(--sidebar-w-compact) minmax(0, 1fr);
+  }
+}

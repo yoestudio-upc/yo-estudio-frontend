@@ -1,0 +1,228 @@
+@if (loading()) {
+  <p class="state" role="status">Cargando…</p>
+} @else if (evaluation.error() || course.error()) {
+  <div yeCard class="state state--error" role="alert">
+    <p>No encontramos esta evaluación.</p>
+    <a yeButton variant="outline" size="sm" routerLink="/docente/cursos">Volver a mis cursos</a>
+  </div>
+} @else {
+  <div class="page">
+    <ye-page-header
+      [heading]="evaluationId() ? 'Editar evaluación' : 'Crear evaluación'"
+      [crumbs]="crumbs()"
+    >
+      <div headerAside class="header-actions">
+        @if (locked()) {
+          <button yeButton variant="white" size="sm" type="button" (click)="cancel()">
+            Volver al curso
+          </button>
+        } @else {
+          <button yeButton variant="white" size="sm" type="button" (click)="cancel()">
+            Cancelar
+          </button>
+          @if (isScheduled()) {
+            <button
+              yeButton
+              size="sm"
+              type="button"
+              [attr.aria-busy]="busy() || null"
+              (click)="save()"
+            >
+              Guardar cambios
+            </button>
+          } @else {
+            <button
+              yeButton
+              variant="outline"
+              size="sm"
+              type="button"
+              [attr.aria-busy]="busy() || null"
+              (click)="save()"
+            >
+              Guardar borrador
+            </button>
+            <button
+              yeButton
+              size="sm"
+              type="button"
+              [attr.aria-busy]="busy() || null"
+              (click)="publish()"
+            >
+              Publicar evaluación
+            </button>
+          }
+        }
+      </div>
+    </ye-page-header>
+
+    @if (problems().length) {
+      <div class="form-problems" role="alert" tabindex="-1">
+        Antes de seguir, revisa esto:
+        <ul>
+          @for (p of problems(); track p) {
+            <li>{{ p }}</li>
+          }
+        </ul>
+      </div>
+    }
+    @if (notice(); as message) {
+      <p class="form-notice" role="status">{{ message }}</p>
+    }
+
+    @if (locked()) {
+      <div yeCard class="state">
+        Esta evaluación ya empezó, así que no se puede editar. Así lo que rinden los alumnos no
+        cambia a mitad de camino.
+      </div>
+    } @else {
+      <div class="columns">
+        <section yeCard class="panel" aria-labelledby="data-title" [formGroup]="form">
+          <h2 id="data-title">Datos de la evaluación</h2>
+
+          <div class="field">
+            <label class="form-label" for="ev-name">Nombre</label>
+            <input
+              id="ev-name"
+              class="form-control"
+              type="text"
+              formControlName="name"
+              placeholder="Ej. Fracciones – Unidad 3"
+            />
+          </div>
+
+          <div class="field">
+            <label class="form-label" for="ev-topic">Tema</label>
+            <p class="form-hint" id="ev-topic-hint">
+              @if (questions().length) {
+                Para cambiar el tema, primero elimina las preguntas.
+              } @else {
+                Elige un tema del catálogo. Cada evaluación evalúa un solo tema.
+              }
+            </p>
+            <select
+              id="ev-topic"
+              class="form-control"
+              formControlName="topicId"
+              aria-describedby="ev-topic-hint"
+              (change)="onTopicChange()"
+            >
+              <option [ngValue]="null" disabled>Elige un tema</option>
+              @for (t of catalog.value() ?? []; track t.id) {
+                <option [ngValue]="t.id">{{ t.name }}</option>
+              }
+            </select>
+          </div>
+
+          @if (topic(); as selected) {
+            <div class="field">
+              <p class="form-label" id="ev-subtopics">Subtemas que se evaluarán</p>
+              <div class="subtopics" role="group" aria-labelledby="ev-subtopics">
+                @for (s of selected.subtopics; track s.id) {
+                  <button
+                    type="button"
+                    class="subtopic"
+                    [attr.aria-pressed]="isSelected(s.id)"
+                    (click)="toggleSubtopic(s.id)"
+                  >
+                    @if (isSelected(s.id)) {
+                      <ye-icon name="check" [size]="16" />
+                    }
+                    {{ s.name }}
+                  </button>
+                }
+              </div>
+              <p class="form-hint hint" role="status">{{ hint() }}</p>
+            </div>
+          }
+
+          <div class="dates">
+            <div class="field">
+              <label class="form-label" for="ev-start">Fecha de inicio</label>
+              <input id="ev-start" class="form-control" type="date" formControlName="startDate" />
+            </div>
+            <div class="field">
+              <label class="form-label" for="ev-end">Fecha de fin</label>
+              <input id="ev-end" class="form-control" type="date" formControlName="endDate" />
+            </div>
+          </div>
+
+          <fieldset class="reading">
+            <legend class="form-label">
+              Texto de lectura <span class="optional">(opcional)</span>
+            </legend>
+            <p class="form-hint">
+              Un cuento o una noticia corta. El estudiante lo verá junto a cada pregunta.
+            </p>
+            <label class="visually-hidden" for="ev-reading-title">Título del texto</label>
+            <input
+              id="ev-reading-title"
+              class="form-control"
+              type="text"
+              formControlName="readingTitle"
+              placeholder="Título (ej. La semilla de Lucía)"
+            />
+            <label class="visually-hidden" for="ev-reading-text">Texto</label>
+            <textarea
+              id="ev-reading-text"
+              class="form-control"
+              rows="4"
+              formControlName="readingText"
+              placeholder="Escribe aquí el texto que leerán los estudiantes."
+            ></textarea>
+          </fieldset>
+        </section>
+
+        <section yeCard class="panel" aria-labelledby="questions-title">
+          <div class="section-head">
+            <h2 id="questions-title">
+              Preguntas <span class="count">({{ questions().length }})</span>
+            </h2>
+            <button yeButton size="sm" type="button" (click)="goToQuestion()">
+              <ye-icon name="plus" [size]="20" />
+              Crear pregunta
+            </button>
+          </div>
+
+          <ol class="questions" role="list">
+            @for (q of questions(); track q.id; let i = $index) {
+              <li class="question">
+                <span class="number" aria-hidden="true">{{ i + 1 }}</span>
+                <div class="question-body">
+                  <p class="question-text">
+                    <span class="visually-hidden">Pregunta {{ i + 1 }}: </span>{{ q.text }}
+                  </p>
+                  <div class="tags">
+                    <ye-chip [tone]="tone()">{{ subtopicName()(q.subtopicId) }}</ye-chip>
+                    <ye-chip tone="yellow">{{ pointsLabel(q.points) }}</ye-chip>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  class="icon-button"
+                  [attr.aria-label]="'Editar pregunta ' + (i + 1)"
+                  (click)="goToQuestion(q.id)"
+                >
+                  <ye-icon name="pencil" [size]="20" />
+                </button>
+                <button
+                  type="button"
+                  class="icon-button icon-button--danger"
+                  [attr.aria-label]="'Eliminar pregunta ' + (i + 1)"
+                  (click)="deleteQuestion(q, i)"
+                >
+                  <ye-icon name="trash" [size]="20" />
+                </button>
+              </li>
+            } @empty {
+              <li class="empty">
+                Todavía no hay preguntas. Elige el tema y los subtemas, y crea la primera.
+              </li>
+            }
+          </ol>
+
+          <p class="total">Total: {{ pointsLabel(totalPoints()) }}</p>
+        </section>
+      </div>
+    }
+  </div>
+}

@@ -1,0 +1,12 @@
+<a class="skip-link" href="#contenido" (click)="skipToContent($event, main)">Saltar al contenido</a>
+<ye-sidebar
+  class="sidebar"
+  [items]="nav()"
+  [userName]="userName()"
+  [userDetail]="userDetail()"
+  [userTone]="userTone()"
+  (logout)="logout()"
+/>
+<main #main id="contenido" class="content" tabindex="-1">
+  <router-outlet />
+</main>

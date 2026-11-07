@@ -1,0 +1,138 @@
+@if (data.isLoading() && !data.hasValue()) {
+  <p class="state" role="status">Preparando tu evaluación…</p>
+} @else if (loadError(); as message) {
+  <div yeCard class="state state--error" role="alert">
+    <p>{{ message }}</p>
+    <a yeButton variant="outline" size="sm" routerLink="/estudiante/cursos">Volver a mis cursos</a>
+  </div>
+} @else if (data.value(); as d) {
+  @if (question(); as q) {
+    <h1 class="visually-hidden">{{ d.name }}</h1>
+
+    <header yeCard class="top">
+      <button type="button" class="exit" [attr.aria-busy]="busy() || null" (click)="saveAndExit()">
+        <span class="exit-icon"><ye-icon name="arrow-left" [size]="20" /></span>
+        Guardar y salir
+      </button>
+      <div class="chips">
+        <span class="chip chip--topic">
+          <ye-icon [name]="topicIcon()" [size]="20" />
+          Tema: {{ d.topic.name }}
+        </span>
+        <span class="chip">Subtema: {{ subtopicName() }}</span>
+      </div>
+      <div class="progress">
+        <p>Pregunta {{ index() + 1 }} de {{ total() }}</p>
+        <div
+          class="bar"
+          role="progressbar"
+          aria-label="Avance de la evaluación"
+          aria-valuemin="1"
+          [attr.aria-valuemax]="total()"
+          [attr.aria-valuenow]="index() + 1"
+        >
+          <span [style.width.%]="((index() + 1) / total()) * 100"></span>
+        </div>
+      </div>
+    </header>
+
+    <div class="body">
+      <main yeCard radius="lg" class="question-card">
+        @if (d.readingText) {
+          <details
+            class="reading"
+            [open]="readingOpen()"
+            (toggle)="readingOpen.set($any($event.target).open)"
+          >
+            <summary>Lee el texto: {{ d.readingTitle || 'Texto de lectura' }}</summary>
+            <p>{{ d.readingText }}</p>
+          </details>
+        }
+
+        <div class="question-head">
+          <span class="number" aria-hidden="true">{{ index() + 1 }}</span>
+          <h2 id="question-text" tabindex="-1">
+            <span class="visually-hidden">Pregunta {{ index() + 1 }} de {{ total() }}: </span>
+            {{ q.text }}
+          </h2>
+        </div>
+
+        <fieldset class="options">
+          <legend class="visually-hidden">Elige una respuesta</legend>
+          @for (o of q.options; track o.id; let i = $index) {
+            <label class="option" [class.chosen]="isChosen(o.id)" [class.long]="o.text.length > 14">
+              <input
+                type="radio"
+                class="visually-hidden"
+                [name]="'answer-' + q.id"
+                [value]="o.id"
+                [checked]="isChosen(o.id)"
+                (change)="choose(o.id)"
+              />
+              <span [class]="'letter tone-' + letterTones[i]" aria-hidden="true">{{
+                letters[i]
+              }}</span>
+              <span class="option-text">{{ o.text }}</span>
+              @if (isChosen(o.id)) {
+                <span class="chosen-tag" aria-hidden="true">
+                  <ye-icon name="check" [size]="16" />
+                  Elegida
+                </span>
+              }
+            </label>
+          }
+        </fieldset>
+
+        <p class="hint" role="status">{{ hint() }}</p>
+        @if (error(); as message) {
+          <p class="form-problems" role="alert">{{ message }}</p>
+        }
+
+        <div class="nav">
+          <button
+            yeButton
+            variant="soft"
+            type="button"
+            [attr.aria-disabled]="index() === 0 || null"
+            (click)="previous()"
+          >
+            <ye-icon name="arrow-left" [size]="22" />
+            Anterior
+          </button>
+          <div class="nav-right">
+            <button yeButton variant="later" type="button" (click)="later()">
+              <ye-icon name="clock" [size]="22" />
+              Dejar para después
+            </button>
+            <button yeButton type="button" (click)="next()">
+              Siguiente
+              <ye-icon name="arrow-right" [size]="22" />
+            </button>
+          </div>
+        </div>
+      </main>
+
+      <aside class="side" aria-label="Ayuda y mapa de preguntas">
+        <div yeCard class="tip">
+          <ye-yoyo pose="calm" [size]="72" />
+          <p>Lee con calma. Si no la sabes, déjala para después y vuelve luego.</p>
+        </div>
+        <div yeCard class="map-card">
+          <ye-question-map [states]="states()" [current]="index()" (select)="goTo($event)" />
+          <button
+            yeButton
+            variant="finish"
+            type="button"
+            class="finish"
+            [block]="true"
+            [attr.aria-busy]="busy() || null"
+            (click)="finish()"
+          >
+            <ye-icon name="check" [size]="20" />
+            Terminar evaluación
+          </button>
+        </div>
+      </aside>
+    </div>
+  }
+}

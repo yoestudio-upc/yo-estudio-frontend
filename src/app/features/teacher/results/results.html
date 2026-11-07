@@ -1,0 +1,251 @@
+@if (report.isLoading() && !report.hasValue()) {
+  <p class="state" role="status">Cargando resultados…</p>
+} @else if (report.error()) {
+  <div yeCard class="state state--error" role="alert">
+    <p>No encontramos los resultados de esta evaluación.</p>
+    <a yeButton variant="outline" size="sm" routerLink="/docente/cursos">Volver a mis cursos</a>
+  </div>
+} @else if (report.value(); as r) {
+  <div class="page">
+    <ye-page-header
+      heading="Resultados"
+      [subtitle]="r.evaluation.name"
+      [crumbs]="[
+        { label: 'Cursos', link: '/docente/cursos' },
+        { label: label(), link: '/docente/cursos/' + r.course.id },
+        { label: r.evaluation.name },
+      ]"
+    >
+      <div headerAside class="header-tags">
+        <span class="topic">
+          <ye-icon [name]="topicIcon()" [size]="18" />
+          Tema: {{ r.evaluation.topic.name }}
+        </span>
+        <ye-status-badge [status]="r.evaluation.status" />
+      </div>
+    </ye-page-header>
+
+    <section yeCard class="summary" aria-label="Resumen">
+      <div class="stat">
+        <p class="stat-value">
+          {{ counts().done }} <span>de {{ counts().all }}</span>
+        </p>
+        <p class="stat-label">la resolvieron</p>
+      </div>
+      <div class="stat">
+        <p class="stat-value">
+          {{ counts().average }} <span>de {{ r.evaluation.questionCount }}</span>
+        </p>
+        <p class="stat-label">aciertos en promedio</p>
+      </div>
+      <div class="stat">
+        <p class="stat-value stat-value--risk">{{ counts().high + counts().medium }}</p>
+        <p class="stat-label">
+          en riesgo
+          <span class="muted">({{ counts().high }} alto · {{ counts().medium }} medio)</span>
+        </p>
+      </div>
+      <div class="stat">
+        <p class="stat-value stat-value--good">{{ counts().achieved }}</p>
+        <p class="stat-label">con el tema logrado</p>
+      </div>
+    </section>
+
+    <p class="note">
+      <ye-icon name="lock" [size]="18" />
+      <span
+        >El riesgo es la probabilidad de que el estudiante quede <strong>En inicio</strong> en la
+        próxima evaluación de {{ r.evaluation.topic.name }}. Solo tú lo ves; al estudiante todo se
+        le muestra en positivo.</span
+      >
+    </p>
+
+    <div class="columns">
+      <section yeCard class="students" aria-labelledby="students-title">
+        <div class="students-head">
+          <h2 id="students-title">Estudiantes</h2>
+          <div class="filters" role="group" aria-label="Filtrar estudiantes">
+            <button
+              type="button"
+              class="filter"
+              [attr.aria-pressed]="filter() === 'all'"
+              (click)="filter.set('all')"
+            >
+              Todos ({{ counts().all }})
+            </button>
+            <button
+              type="button"
+              class="filter"
+              [attr.aria-pressed]="filter() === 'risk'"
+              (click)="filter.set('risk')"
+            >
+              En riesgo ({{ counts().high + counts().medium }})
+            </button>
+            <button
+              type="button"
+              class="filter"
+              [attr.aria-pressed]="filter() === 'pending'"
+              (click)="filter.set('pending')"
+            >
+              Sin resolver ({{ counts().pending }})
+            </button>
+          </div>
+        </div>
+
+        <table class="table">
+          <thead>
+            <tr>
+              <th scope="col">Estudiante</th>
+              <th scope="col">Aciertos</th>
+              <th scope="col">Nivel en el tema</th>
+              <th scope="col">Riesgo</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (s of rows(); track s.studentId) {
+              <tr [class.selected]="s.studentId === selectedId()" [class.pending]="!s.done">
+                <td>
+                  <button
+                    type="button"
+                    class="student"
+                    aria-controls="student-detail"
+                    [attr.aria-current]="s.studentId === selectedId() ? 'true' : null"
+                    (click)="select(s)"
+                  >
+                    <ye-avatar [name]="s.name" [tone]="s.tone" size="sm" />
+                    {{ s.name }}
+                  </button>
+                </td>
+                <td>{{ s.done ? s.correctCount + '/' + r.evaluation.questionCount : '—' }}</td>
+                <td>{{ s.topicLevel ? levelLabel[s.topicLevel] : 'Sin resolver' }}</td>
+                <td>
+                  @if (s.prediction; as p) {
+                    <span class="risk" [class]="'risk risk--' + p.risk">{{
+                      riskLabel[p.risk]
+                    }}</span>
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="4" class="empty">No hay estudiantes en este grupo.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </section>
+
+      <section
+        yeCard
+        id="student-detail"
+        class="detail"
+        aria-live="polite"
+        aria-labelledby="detail-title"
+      >
+        @if (selected(); as s) {
+          <div class="detail-head">
+            <ye-avatar [name]="s.name" [tone]="s.tone" />
+            <div>
+              <h2 id="detail-title">{{ s.name }}</h2>
+              @if (s.done) {
+                <p class="muted">Acertó {{ s.correctCount }} de {{ r.evaluation.questionCount }}</p>
+              }
+            </div>
+          </div>
+
+          @if (!s.done) {
+            <p class="pending-note">Aún no resuelve esta evaluación.</p>
+          } @else {
+            <div class="block">
+              <h3>Nivel por subtema</h3>
+              <ul class="levels" role="list">
+                @for (sub of s.subtopics; track sub.id) {
+                  <li>
+                    <span>{{ sub.name }}</span>
+                    @if (sub.level; as level) {
+                      <span class="level">
+                        {{ levelLabel[level] }}
+                        <ye-star-level [level]="level" [size]="16" [showLabel]="false" />
+                      </span>
+                    }
+                  </li>
+                }
+              </ul>
+            </div>
+
+            @if (s.prediction; as p) {
+              <div class="block prediction">
+                <h3>Próxima evaluación de {{ r.evaluation.topic.name }}</h3>
+                <p>
+                  Nivel previsto: <strong>{{ levelLabel[p.level] }}</strong>
+                  <span class="risk" [class]="'risk risk--' + p.risk">
+                    Riesgo {{ riskLabel[p.risk].toLowerCase() }}
+                  </span>
+                </p>
+              </div>
+            }
+
+            @if (factors().length) {
+              <div class="block">
+                <h3>¿Por qué? <span class="muted">(factores que más pesan)</span></h3>
+                <ul class="shap" role="list">
+                  @for (f of factors(); track f.label) {
+                    <li>
+                      <span class="shap-label">{{ f.label }}</span>
+                      <span class="shap-bar" aria-hidden="true">
+                        <span class="half half--left">
+                          @if (f.raises) {
+                            <span class="fill fill--raise" [style.width.%]="f.percent"></span>
+                          }
+                        </span>
+                        <span class="half">
+                          @if (!f.raises) {
+                            <span class="fill fill--lower" [style.width.%]="f.percent"></span>
+                          }
+                        </span>
+                      </span>
+                      <span class="shap-effect" [class.shap-effect--raise]="f.raises">
+                        {{ f.raises ? 'Aumenta el riesgo' : 'Reduce el riesgo' }}
+                      </span>
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
+
+            @if (s.profile; as profile) {
+              <div class="block">
+                <h3>Forma de responder</h3>
+                <p>
+                  <strong>{{ profile.name }}.</strong> {{ profile.note }}
+                </p>
+              </div>
+            }
+
+            <div class="block">
+              <h3>Metas que recibió</h3>
+              @if (s.goals.length) {
+                <ol class="goals" role="list">
+                  @for (g of s.goals; track g.subtopic; let i = $index) {
+                    <li>
+                      <span class="goal-number">{{ i + 1 }}</span>
+                      <span
+                        ><strong>{{ g.subtopic }}</strong> — {{ g.practice }}</span
+                      >
+                    </li>
+                  }
+                </ol>
+              } @else {
+                <p class="muted">Logró todos sus subtemas en este curso.</p>
+              }
+            </div>
+          }
+        } @else {
+          <p id="detail-title" class="muted">Elige un estudiante para ver su detalle.</p>
+        }
+      </section>
+    </div>
+  </div>
+}

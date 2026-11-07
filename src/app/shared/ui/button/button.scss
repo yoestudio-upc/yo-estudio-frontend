@@ -1,0 +1,121 @@
+:host {
+  --btn-bg: var(--brand);
+  --btn-ink: var(--surface);
+  --btn-border: transparent;
+  --btn-shadow-color: transparent;
+  --btn-shadow-y: 0px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--btn-h);
+  padding: 0 var(--space-6);
+  border: 2px solid var(--btn-border);
+  border-radius: var(--radius-pill);
+  background: var(--btn-bg);
+  color: var(--btn-ink);
+  box-shadow: 0 var(--btn-shadow-y) 0 var(--btn-shadow-color);
+  font-family: var(--font-ui);
+  font-size: var(--fs-button);
+  font-weight: 800;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    transform 80ms ease,
+    box-shadow 80ms ease,
+    background-color 120ms ease;
+}
+
+// Foco: anillo propio + sombra 3D
+:host(:focus-visible) {
+  box-shadow:
+    0 var(--btn-shadow-y) 0 var(--btn-shadow-color),
+    var(--focus-ring);
+}
+
+// Al presionar, el botón "baja"
+:host(:active:not(:disabled, [aria-disabled='true'])) {
+  transform: translateY(3px);
+  --btn-shadow-y: 1px;
+}
+
+:host(:disabled),
+:host([aria-disabled='true']) {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+// Tamaños
+:host(.ye-btn--sm) {
+  min-height: 46px;
+  padding: 0 18px;
+  font-size: 16px;
+}
+
+:host(.ye-btn--lg) {
+  min-height: var(--btn-h-lg);
+  padding: 0 28px;
+  font-size: 22px;
+  gap: 10px;
+}
+
+:host(.ye-btn--block) {
+  display: flex;
+  width: 100%;
+}
+
+// Variantes
+:host(.ye-btn--primary) {
+  --btn-shadow-color: var(--brand-shadow);
+  --btn-shadow-y: 4px;
+}
+
+:host(.ye-btn--primary.ye-btn--lg) {
+  --btn-shadow-y: 5px;
+}
+
+:host(.ye-btn--soft) {
+  --btn-bg: var(--brand-soft);
+  --btn-ink: var(--brand);
+}
+
+:host(.ye-btn--outline) {
+  --btn-bg: var(--surface);
+  --btn-ink: var(--brand);
+  --btn-border: var(--brand);
+}
+
+:host(.ye-btn--white) {
+  --btn-bg: var(--surface);
+  --btn-ink: var(--text-2);
+}
+
+:host(.ye-btn--later) {
+  --btn-bg: var(--orange-soft);
+  --btn-ink: var(--orange-ink);
+  --btn-border: var(--later-border);
+  border-width: 3px;
+}
+
+:host(.ye-btn--finish) {
+  --btn-bg: var(--green);
+  --btn-shadow-color: var(--green-shadow);
+  --btn-shadow-y: 4px;
+}
+
+:host(.ye-btn--on-brand) {
+  --btn-bg: transparent;
+  --btn-ink: var(--surface);
+  --btn-border: var(--surface);
+}
+
+:host(.ye-btn--dashed) {
+  --btn-bg: var(--surface);
+  --btn-ink: var(--brand);
+  --btn-border: var(--dashed);
+  border-style: dashed;
+}

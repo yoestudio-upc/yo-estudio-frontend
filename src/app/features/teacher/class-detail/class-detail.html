@@ -1,0 +1,130 @@
+@if (detail.isLoading() && !detail.hasValue()) {
+  <p class="state" role="status">Cargando el curso…</p>
+} @else if (notFound()) {
+  <div yeCard class="state state--error" role="alert">
+    <p>No encontramos este curso.</p>
+    <a yeButton variant="outline" size="sm" routerLink="/docente/cursos">Volver a mis cursos</a>
+  </div>
+} @else if (detail.error()) {
+  <div yeCard class="state state--error" role="alert">
+    <p>No pudimos cargar el curso.</p>
+    <button yeButton variant="outline" size="sm" type="button" (click)="detail.reload()">
+      Intentar otra vez
+    </button>
+  </div>
+} @else if (detail.value(); as course) {
+  <div class="page">
+    <ye-page-header
+      [heading]="label()"
+      [crumbs]="[{ label: 'Cursos', link: '/docente/cursos' }, { label: label() }]"
+    >
+      <p headerAside class="code">
+        Código para unirse: <strong>{{ course.joinCode }}</strong>
+      </p>
+    </ye-page-header>
+
+    @if (notice(); as message) {
+      <p class="form-notice" role="status">{{ message }}</p>
+    }
+
+    <div class="columns">
+      <section yeCard class="evaluations" aria-labelledby="evaluations-title">
+        <div class="section-head">
+          <h2 id="evaluations-title">Evaluaciones</h2>
+          <a yeButton [routerLink]="['/docente/cursos', course.id, 'evaluaciones', 'nueva']">
+            <ye-icon name="plus" [size]="22" />
+            Crear evaluación
+          </a>
+        </div>
+
+        @if (evaluations.isLoading() && !evaluations.hasValue()) {
+          <p class="state" role="status">Cargando evaluaciones…</p>
+        } @else if (evaluations.error()) {
+          <div class="state state--error" role="alert">
+            <p>No pudimos cargar las evaluaciones.</p>
+            <button
+              yeButton
+              variant="outline"
+              size="sm"
+              type="button"
+              (click)="evaluations.reload()"
+            >
+              Intentar otra vez
+            </button>
+          </div>
+        } @else {
+          <ul class="rows" role="list">
+            @for (e of rows(); track e.id) {
+              <li class="row">
+                <span class="topic-icon" [class]="'tone-' + e.style.tone">
+                  <ye-icon [name]="e.style.icon" [size]="26" />
+                </span>
+                <div class="row-body">
+                  <div class="row-title">
+                    <h3>{{ e.name }}</h3>
+                    <ye-status-badge [status]="e.status" />
+                  </div>
+                  <p class="row-meta">{{ e.meta }}</p>
+                </div>
+                @if (e.status === 'published' || e.status === 'closed') {
+                  <a
+                    yeButton
+                    variant="outline"
+                    size="sm"
+                    [routerLink]="['/docente/evaluaciones', e.id, 'resultados']"
+                  >
+                    Ver resultados<span class="visually-hidden"> de {{ e.name }}</span>
+                  </a>
+                } @else {
+                  <a
+                    yeButton
+                    variant="outline"
+                    size="sm"
+                    [routerLink]="['/docente/evaluaciones', e.id, 'editar']"
+                  >
+                    Editar<span class="visually-hidden"> {{ e.name }}</span>
+                  </a>
+                }
+              </li>
+            } @empty {
+              <li class="state">Aún no hay evaluaciones en este curso. ¡Crea la primera!</li>
+            }
+          </ul>
+        }
+      </section>
+
+      <section yeCard class="students" aria-labelledby="students-title">
+        <div class="students-head">
+          <h2 id="students-title">Estudiantes</h2>
+          <span class="count">{{ course.studentCount }} en total</span>
+        </div>
+        <ul id="students-list" class="student-list" role="list">
+          @for (s of students(); track s.id) {
+            <li>
+              <ye-avatar [name]="s.name" [tone]="s.tone" size="sm" />
+              {{ s.name }}
+            </li>
+          }
+        </ul>
+        @if (hasMoreStudents()) {
+          <button
+            yeButton
+            variant="soft"
+            size="sm"
+            type="button"
+            class="more"
+            aria-controls="students-list"
+            [attr.aria-expanded]="showAllStudents()"
+            (click)="showAllStudents.set(!showAllStudents())"
+          >
+            @if (showAllStudents()) {
+              Ver menos
+            } @else {
+              Ver los {{ course.studentCount }} estudiantes
+            }
+          </button>
+        }
+      </section>
+    </div>
+  </div>
+}

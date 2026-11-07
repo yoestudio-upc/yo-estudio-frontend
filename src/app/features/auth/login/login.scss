@@ -1,0 +1,165 @@
+.page {
+  display: grid;
+  grid-template-columns: minmax(360px, 540px) minmax(0, 1fr);
+  gap: var(--space-7);
+  min-height: 100vh;
+  padding: 48px 64px;
+}
+
+// Panel azul con Yoyo
+.welcome {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 44px 48px;
+}
+
+.logo {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 700;
+}
+
+.yoyo {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+}
+
+.bubble {
+  align-self: flex-start;
+  margin-top: 18px;
+  padding: 18px var(--space-5);
+  border-radius: var(--space-6);
+  background: var(--surface);
+  color: var(--text);
+  font-size: var(--fs-body-lg);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.features {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    font-size: 19px;
+    font-weight: 600;
+  }
+}
+
+.feature-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.feature-icon--orange {
+  background: var(--orange-bg);
+  color: var(--orange-ink);
+}
+
+.feature-icon--yellow {
+  background: var(--yellow-bg);
+  color: var(--yellow-ink);
+}
+
+.feature-icon--green {
+  background: var(--green-bg);
+  color: var(--green);
+}
+
+// Formulario
+.login {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 26px;
+  padding: 56px 64px;
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+
+  h1 {
+    font-size: var(--fs-title-xl);
+  }
+
+  p {
+    font-size: var(--fs-body-lg);
+    color: var(--text-3);
+  }
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+}
+
+.alert {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 14px 18px;
+  border-radius: var(--radius-inner);
+  background: var(--orange-soft);
+  color: var(--orange-ink);
+  font-size: var(--fs-body);
+  font-weight: 700;
+}
+
+.help {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: var(--fs-body);
+  color: var(--text-3);
+}
+
+.help-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--yellow-bg);
+  color: var(--yellow-ink);
+}
+
+// Laptops pequeñas y tablets horizontales
+@media (max-width: 1199px) {
+  .page {
+    gap: var(--space-6);
+    padding: var(--space-7);
+  }
+
+  .welcome {
+    padding: var(--space-8) 36px;
+  }
+
+  .login {
+    padding: 48px;
+  }
+
+  .heading h1 {
+    font-size: var(--fs-title-lg);
+  }
+
+  .yoyo ye-yoyo {
+    --yoyo-size: 140px;
+  }
+}

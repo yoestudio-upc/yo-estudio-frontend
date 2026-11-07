@@ -1,0 +1,84 @@
+<main class="page">
+  <section yeCard variant="brand" radius="xl" class="welcome" aria-labelledby="welcome-title">
+    <p id="welcome-title" class="logo">YoEstudio</p>
+
+    <div class="yoyo">
+      <ye-yoyo pose="wave" [size]="190" />
+      <p class="bubble">¡Hola! Soy Yoyo. Te acompaño mientras aprendes.</p>
+    </div>
+
+    <ul class="features" role="list">
+      <li>
+        <span class="feature-icon feature-icon--orange"><ye-icon name="pencil" /></span>
+        Resuelve las evaluaciones de tu profe
+      </li>
+      <li>
+        <span class="feature-icon feature-icon--yellow"><ye-icon name="star" /></span>
+        Gana estrellas en cada subtema
+      </li>
+      <li>
+        <span class="feature-icon feature-icon--green"><ye-icon name="flag" /></span>
+        Sigue tus metas para mejorar
+      </li>
+    </ul>
+  </section>
+
+  <section yeCard radius="xl" class="login">
+    <div class="heading">
+      <h1>¿Listo para aprender?</h1>
+      <p>Escribe tu usuario y tu contraseña.</p>
+    </div>
+
+    <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      @if (error(); as message) {
+        <p class="alert" role="alert">
+          <ye-icon name="help" [size]="22" />
+          {{ message }}
+        </p>
+      }
+
+      <ye-text-field label="Usuario" icon="user" [error]="fieldError('username')">
+        <input
+          yeInput
+          formControlName="username"
+          type="text"
+          placeholder="Ej. camila.rojas"
+          autocomplete="username"
+          autocapitalize="none"
+          spellcheck="false"
+        />
+      </ye-text-field>
+
+      <ye-text-field label="Contraseña" icon="lock" [error]="fieldError('password')">
+        <input
+          yeInput
+          formControlName="password"
+          type="password"
+          placeholder="Tu contraseña"
+          autocomplete="current-password"
+        />
+      </ye-text-field>
+
+      <button
+        yeButton
+        size="lg"
+        [block]="true"
+        type="submit"
+        [attr.aria-disabled]="loading() || null"
+        [attr.aria-busy]="loading() || null"
+      >
+        @if (loading()) {
+          Entrando…
+        } @else {
+          ¡Entrar!
+          <ye-icon name="arrow-right" />
+        }
+      </button>
+    </form>
+
+    <p class="help">
+      <span class="help-icon"><ye-icon name="help" [size]="20" /></span>
+      ¿Olvidaste tu contraseña? Pídele ayuda a tu profe.
+    </p>
+  </section>
+</main>

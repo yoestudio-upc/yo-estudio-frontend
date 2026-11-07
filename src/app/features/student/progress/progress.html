@@ -1,0 +1,116 @@
+<div class="page">
+  <ye-page-header
+    heading="Mi avance"
+    subtitle="Cada tema tiene varios subtemas. ¡Consigue 3 estrellas en cada uno!"
+  >
+    @if (tabs().length > 1) {
+      <div headerAside class="tabs" role="tablist" aria-label="Curso">
+        @for (t of tabs(); track t.id; let i = $index) {
+          <button
+            type="button"
+            role="tab"
+            [id]="'tab-' + t.id"
+            [class]="'tab ink-' + t.tone"
+            [attr.aria-selected]="selected() === t.id"
+            [attr.tabindex]="selected() === t.id ? 0 : -1"
+            aria-controls="progress-panel"
+            (click)="select(t.id)"
+            (keydown)="onTabKey($event, i)"
+          >
+            {{ t.label }}
+          </button>
+        }
+      </div>
+    }
+  </ye-page-header>
+
+  @if (classes.isLoading() || (progress.isLoading() && !progress.hasValue())) {
+    <p class="state" role="status">Cargando tu avance…</p>
+  } @else if (classes.error() || progress.error()) {
+    <div yeCard class="state state--error" role="alert">
+      <p>No pudimos cargar tu avance.</p>
+      <button yeButton variant="outline" size="sm" type="button" (click)="progress.reload()">
+        Intentar otra vez
+      </button>
+    </div>
+  } @else if (!selected()) {
+    <div yeCard class="state">Cuando te unas a un curso, aquí verás tu avance.</div>
+  } @else {
+    <div
+      id="progress-panel"
+      class="columns"
+      [attr.role]="tabs().length > 1 ? 'tabpanel' : null"
+      [attr.aria-labelledby]="tabs().length > 1 ? 'tab-' + selected() : null"
+    >
+      <div class="topics">
+        @for (t of topics(); track t.topic.id) {
+          <section yeCard class="topic" [attr.aria-labelledby]="'topic-' + t.topic.id">
+            <div class="topic-head">
+              <span class="topic-icon" [class]="'topic-icon tone-' + t.style.tone">
+                <ye-icon [name]="t.style.icon" [size]="26" />
+              </span>
+              <div>
+                <p class="topic-label" [class]="'topic-label ink-' + t.style.tone">Tema</p>
+                <h2 [id]="'topic-' + t.topic.id">{{ t.topic.name }}</h2>
+              </div>
+            </div>
+            <p class="count">
+              {{ t.achieved }} de {{ t.subtopics.length }}
+              {{ t.subtopics.length === 1 ? 'subtema logrado' : 'subtemas logrados' }}
+            </p>
+            <div class="bar" aria-hidden="true">
+              <span [style.width.%]="t.percent"></span>
+            </div>
+            <ul class="subtopics" role="list">
+              @for (s of t.subtopics; track s.id) {
+                <li>
+                  <span class="subtopic-text">
+                    <span class="subtopic-name">{{ s.name }}</span>
+                    <span class="subtopic-level">
+                      {{ s.level ? levelLabel[s.level] : 'Aún sin evaluar' }}
+                    </span>
+                  </span>
+                  @if (s.level) {
+                    <ye-star-level [level]="s.level" [size]="20" [showLabel]="false" />
+                  }
+                </li>
+              }
+            </ul>
+          </section>
+        }
+      </div>
+
+      <aside class="side">
+        <section yeCard class="profile" aria-labelledby="profile-title">
+          <p id="profile-title" class="profile-title">Tu forma de responder</p>
+          @if (progress.value()?.profile; as profile) {
+            <div class="profile-head">
+              <ye-yoyo pose="thinking" [size]="72" />
+              <p class="profile-name">{{ profile.name }}</p>
+            </div>
+            <p>{{ profile.description }}</p>
+          } @else {
+            <div class="profile-head">
+              <ye-yoyo pose="calm" [size]="72" />
+              <p>Cuando resuelvas una evaluación, Yoyo te contará cómo respondes.</p>
+            </div>
+          }
+        </section>
+
+        <section yeCard class="legend" aria-labelledby="legend-title">
+          <h2 id="legend-title">¿Qué significan las estrellas?</h2>
+          <ul role="list">
+            @for (l of levels; track l) {
+              <li>
+                <ye-star-level [level]="l" [size]="16" [showLabel]="false" />
+                <span
+                  ><strong>{{ levelLabel[l] }}{{ l < 3 ? ':' : '' }}</strong> {{ legend[l] }}</span
+                >
+              </li>
+            }
+          </ul>
+        </section>
+      </aside>
+    </div>
+  }
+</div>

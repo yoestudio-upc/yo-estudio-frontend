@@ -1,0 +1,10 @@
+<label class="label" [for]="inputId">{{ label() }}</label>
+<div class="box">
+  @if (icon(); as name) {
+    <ye-icon [name]="name" />
+  }
+  <ng-content />
+</div>
+@if (errorId(); as id) {
+  <p class="error" [id]="id">{{ error() }}</p>
+}
