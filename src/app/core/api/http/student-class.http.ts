@@ -6,6 +6,7 @@ import {
   StudentClassSummary,
   StudentEvaluationSummary,
 } from '../../models/dto/student.dto';
+import { Level } from '../../models/level';
 import { API_URL } from '../api-url';
 import { StudentClassApi } from '../student-class.api';
 import { BackendCourse, BackendTopicRef, toTagRefs } from './course-dto';
@@ -32,6 +33,7 @@ interface BackendCourseEvaluations {
   done: BackendStudentEvaluation[];
   lastEvaluationName: string | null;
   achievedCount: number;
+  nextGoal: (BackendTopicRef & { level: Level; topicName: string }) | null;
 }
 
 @Injectable()
@@ -45,7 +47,7 @@ export class StudentClassHttpApi extends StudentClassApi {
       .pipe(map((courses) => courses.map(toSummary)));
   }
 
-  // Curso + sus evaluaciones y subtemas logrados. La meta principal llega con HU07.
+  // Curso + sus evaluaciones, subtemas logrados y la meta principal del plan de refuerzo
   getOverview(classId: string): Observable<StudentClassOverview> {
     const base = `${this.apiUrl}/students/me/courses/${classId}`;
     return forkJoin({
@@ -56,7 +58,9 @@ export class StudentClassHttpApi extends StudentClassApi {
         course: toSummary(course),
         pending: evaluations.pending.map(toEvaluationSummary),
         done: evaluations.done.map(toEvaluationSummary),
-        nextGoal: null,
+        nextGoal: evaluations.nextGoal
+          ? { ...evaluations.nextGoal, id: String(evaluations.nextGoal.id) }
+          : null,
         achievedCount: evaluations.achievedCount,
         lastEvaluationName: evaluations.lastEvaluationName,
       })),

@@ -92,6 +92,7 @@ describe('StudentClassHttpApi', () => {
       done: [evaluation(7, true)],
       lastEvaluationName: 'Fracciones 7',
       achievedCount: 2,
+      nextGoal: { id: 5, code: 'comparar-fracciones', name: 'Comparar fracciones', level: 1, topicName: 'Fracciones' },
     });
     expect(result?.course).toEqual({ ...SUMMARY, pendingCount: 1 });
     expect(result?.pending).toEqual([
@@ -110,6 +111,12 @@ describe('StudentClassHttpApi', () => {
     expect(result?.done.map((e) => e.id)).toEqual(['7']);
     expect(result?.lastEvaluationName).toBe('Fracciones 7');
     expect(result?.achievedCount).toBe(2);
-    expect(result?.nextGoal).toBeNull();
+    expect(result?.nextGoal).toEqual({
+      id: '5',
+      code: 'comparar-fracciones',
+      name: 'Comparar fracciones',
+      level: 1,
+      topicName: 'Fracciones',
+    });
   });
 });
