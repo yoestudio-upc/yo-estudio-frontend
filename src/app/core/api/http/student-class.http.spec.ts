@@ -91,6 +91,7 @@ describe('StudentClassHttpApi', () => {
       pending: [evaluation(8, false)],
       done: [evaluation(7, true)],
       lastEvaluationName: 'Fracciones 7',
+      achievedCount: 2,
     });
     expect(result?.course).toEqual({ ...SUMMARY, pendingCount: 1 });
     expect(result?.pending).toEqual([
@@ -108,6 +109,7 @@ describe('StudentClassHttpApi', () => {
     ]);
     expect(result?.done.map((e) => e.id)).toEqual(['7']);
     expect(result?.lastEvaluationName).toBe('Fracciones 7');
+    expect(result?.achievedCount).toBe(2);
     expect(result?.nextGoal).toBeNull();
   });
 });

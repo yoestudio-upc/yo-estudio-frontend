@@ -31,6 +31,7 @@ interface BackendCourseEvaluations {
   pending: BackendStudentEvaluation[];
   done: BackendStudentEvaluation[];
   lastEvaluationName: string | null;
+  achievedCount: number;
 }
 
 @Injectable()
@@ -44,7 +45,7 @@ export class StudentClassHttpApi extends StudentClassApi {
       .pipe(map((courses) => courses.map(toSummary)));
   }
 
-  // Curso + sus evaluaciones. Metas y subtemas logrados llegan con el módulo ML (HU04/HU07).
+  // Curso + sus evaluaciones y subtemas logrados. La meta principal llega con HU07.
   getOverview(classId: string): Observable<StudentClassOverview> {
     const base = `${this.apiUrl}/students/me/courses/${classId}`;
     return forkJoin({
@@ -56,7 +57,7 @@ export class StudentClassHttpApi extends StudentClassApi {
         pending: evaluations.pending.map(toEvaluationSummary),
         done: evaluations.done.map(toEvaluationSummary),
         nextGoal: null,
-        achievedCount: 0,
+        achievedCount: evaluations.achievedCount,
         lastEvaluationName: evaluations.lastEvaluationName,
       })),
     );
