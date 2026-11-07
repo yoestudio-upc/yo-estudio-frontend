@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { Goal } from '../../models/dto/student.dto';
+import { Goal, StudentProgress } from '../../models/dto/student.dto';
 import { API_URL } from '../api-url';
 import { StudentProgressHttpApi } from './student-progress.http';
 
@@ -47,5 +47,39 @@ describe('StudentProgressHttpApi', () => {
         practice: { kind: 'concrete', text: 'Problemas con dibujos.' },
       },
     ]);
+  });
+
+  it('trae Mi avance del curso con subtemas sin evaluar y el perfil', () => {
+    let result: StudentProgress | undefined;
+    api.getProgress('3').subscribe((r) => (result = r));
+    const profile = { code: 'explorer', name: 'Con muchas ideas', description: 'Pruebas varias opciones.' };
+    backend.expectOne('/api/students/me/courses/3/progress').flush({
+      classId: 3,
+      topics: [
+        {
+          topic: { id: 2, code: 'fracciones', name: 'Fracciones' },
+          subtopics: [
+            { id: 3, code: 'fracciones-equivalentes', name: 'Fracciones equivalentes', level: 3 },
+            { id: 4, code: 'sumar-fracciones', name: 'Sumar fracciones', level: null },
+          ],
+          achieved: 1,
+        },
+      ],
+      profile,
+    });
+    expect(result).toEqual({
+      classId: '3',
+      topics: [
+        {
+          topic: { id: '2', code: 'fracciones', name: 'Fracciones' },
+          subtopics: [
+            { id: '3', code: 'fracciones-equivalentes', name: 'Fracciones equivalentes', level: 3 },
+            { id: '4', code: 'sumar-fracciones', name: 'Sumar fracciones', level: null },
+          ],
+          achieved: 1,
+        },
+      ],
+      profile,
+    });
   });
 });

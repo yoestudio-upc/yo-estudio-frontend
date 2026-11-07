@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 import { Goal, StudentProgress } from '../../models/dto/student.dto';
+import { Level } from '../../models/level';
 import { API_URL } from '../api-url';
 import { StudentProgressApi } from '../student-progress.api';
 import { BackendTopicRef, toTagRefs } from './course-dto';
@@ -12,6 +13,16 @@ type BackendGoal = Omit<Goal, 'classId' | 'topic' | 'subtopic'> & {
   topic: BackendTopicRef;
   subtopic: BackendTopicRef;
 };
+
+interface BackendProgress {
+  classId: number;
+  topics: {
+    topic: BackendTopicRef;
+    subtopics: (BackendTopicRef & { level: Level | null })[];
+    achieved: number;
+  }[];
+  profile: StudentProgress['profile'];
+}
 
 @Injectable()
 export class StudentProgressHttpApi extends StudentProgressApi {
@@ -33,8 +44,18 @@ export class StudentProgressHttpApi extends StudentProgressApi {
   }
 
   getProgress(classId: string): Observable<StudentProgress> {
-    return this.http.get<StudentProgress>(`${this.apiUrl}/me/progress`, {
-      params: { courseId: classId },
-    });
+    return this.http
+      .get<BackendProgress>(`${this.apiUrl}/students/me/courses/${classId}/progress`)
+      .pipe(
+        map((p) => ({
+          classId: String(p.classId),
+          topics: p.topics.map((t) => ({
+            topic: toTagRefs([t.topic])[0],
+            subtopics: t.subtopics.map((s) => ({ ...toTagRefs([s])[0], level: s.level })),
+            achieved: t.achieved,
+          })),
+          profile: p.profile,
+        })),
+      );
   }
 }
