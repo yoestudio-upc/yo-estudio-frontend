@@ -47,20 +47,4 @@
       }
     </section>
   </div>
-
-  @if (demo) {
-    <section yeCard variant="soft" class="demo" aria-labelledby="demo-title">
-      <div>
-        <h2 id="demo-title">Datos de prueba</h2>
-        <p class="muted">
-          Mientras no haya backend, lo que se crea queda guardado en este navegador. Para empezar
-          una sesión de prueba desde cero, restablece los datos de ejemplo.
-        </p>
-      </div>
-      <button yeButton variant="outline" size="sm" type="button" (click)="resetDemo()">
-        <ye-icon name="refresh" [size]="20" />
-        Restablecer datos de ejemplo
-      </button>
-    </section>
-  }
 </div>

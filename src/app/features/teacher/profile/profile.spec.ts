@@ -2,7 +2,6 @@ import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { AuthApi } from '../../../core/api/auth.api';
-import { MockDb } from '../../../core/api/mock/mock-db';
 import { TeacherClassApi } from '../../../core/api/teacher-class.api';
 import { AuthService } from '../../../core/auth/auth.service';
 import { SessionStore } from '../../../core/auth/session-store';
@@ -61,14 +60,5 @@ describe('TeacherProfile', () => {
       .click();
     expect(TestBed.inject(AuthService).isAuthenticated()).toBe(false);
     expect(navigate).toHaveBeenCalledWith('/ingreso');
-  });
-
-  it('restablecer los datos de ejemplo vuelve al estado inicial', async () => {
-    const { el } = await render();
-    const db = TestBed.inject(MockDb);
-    const reset = vi.spyOn(db, 'reset');
-    [...el.querySelectorAll('button')].find((b) => b.textContent?.includes('Restablecer'))!.click();
-    await new Promise((r) => setTimeout(r));
-    expect(reset).toHaveBeenCalled();
   });
 });

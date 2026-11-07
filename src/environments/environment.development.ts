@@ -1,6 +1,5 @@
-// Desarrollo local: /api pasa por proxy.conf.json (evita el CORS del backend)
+// Desarrollo local: /api pasa por proxy.conf.json hacia el backend en localhost:8000/api/v1
 export const environment = {
   production: false,
-  useMocks: true,
   apiUrl: '/api',
 };
