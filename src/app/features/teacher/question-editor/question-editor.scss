@@ -202,3 +202,9 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+// HU13 · Nota de la vista previa (opción múltiple y respuesta corta)
+.preview-note {
+  font-style: italic;
+  color: var(--text-3);
+}

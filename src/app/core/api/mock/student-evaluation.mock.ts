@@ -7,6 +7,7 @@ import {
   TakeProgress,
   TelemetryBatch,
 } from '../../models/dto/student.dto';
+import { isCorrectAnswer, storedAnswer } from '../../domain/question-rules';
 import { StudentEvaluationApi } from '../student-evaluation.api';
 import { MockEvaluation } from './data/evaluations';
 import { MockDb, fail, respond } from './mock-db';
@@ -33,9 +34,11 @@ export class StudentEvaluationMockApi extends StudentEvaluationApi {
       // Sin respuesta correcta ni puntos
       questions: e.questions.map((q) => ({
         id: q.id,
+        type: q.type,
         subtopicId: q.subtopicId,
         text: q.text,
-        options: q.options.map((o) => ({ id: o.id, text: o.text })),
+        // Respuesta corta: las aceptadas nunca llegan al alumno
+        options: q.type === 'short' ? [] : q.options.map((o) => ({ id: o.id, text: o.text })),
       })),
       progress: this.db.progress.get(this.key(e.id)) ?? null,
     });
@@ -73,7 +76,7 @@ export class StudentEvaluationMockApi extends StudentEvaluationApi {
     this.db.results.push({
       evaluationId,
       studentId: this.me(),
-      answers: Object.fromEntries(e.questions.map((q) => [q.id, progress.answers[q.id] ?? null])),
+      answers: Object.fromEntries(e.questions.map((q) => [q.id, storedAnswer(q, progress)])),
       submittedAt: new Date().toISOString(),
     });
     this.db.progress.delete(this.key(evaluationId));
@@ -110,9 +113,7 @@ export class StudentEvaluationMockApi extends StudentEvaluationApi {
     const result = this.db.resultOf(e.id, this.me())!;
     const levels = this.db.levelsOf(this.me(), e.classId);
     const answered = Object.values(result.answers).filter((a) => a !== null).length;
-    const correct = e.questions.filter((q) =>
-      q.options.some((o) => o.correct && o.id === result.answers[q.id]),
-    ).length;
+    const correct = e.questions.filter((q) => isCorrectAnswer(q, result.answers[q.id] ?? null)).length;
     return {
       evaluationId: e.id,
       classId: e.classId,

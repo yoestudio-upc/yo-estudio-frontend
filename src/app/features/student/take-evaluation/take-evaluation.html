@@ -57,6 +57,46 @@
           </h2>
         </div>
 
+        @if (q.type === 'short') {
+          <div class="short-answer">
+            <label class="short-label" for="short-answer">Escribe tu respuesta</label>
+            <input
+              id="short-answer"
+              class="form-control short-input"
+              type="text"
+              maxlength="255"
+              autocomplete="off"
+              [value]="textOf(q.id)"
+              (input)="write($any($event.target).value)"
+              (change)="commitText()"
+            />
+          </div>
+        } @else if (q.type === 'multiple') {
+        <fieldset class="options">
+          <legend class="multi-hint">Puedes marcar varias respuestas.</legend>
+          @for (o of q.options; track o.id; let i = $index) {
+            <label class="option" [class.chosen]="isChosen(o.id)" [class.long]="o.text.length > 14">
+              <input
+                type="checkbox"
+                class="visually-hidden"
+                [name]="'answer-' + q.id + '-' + o.id"
+                [checked]="isChosen(o.id)"
+                (change)="toggle(o.id)"
+              />
+              <span [class]="'letter tone-' + letterTones[i]" aria-hidden="true">{{
+                letters[i]
+              }}</span>
+              <span class="option-text">{{ o.text }}</span>
+              @if (isChosen(o.id)) {
+                <span class="chosen-tag" aria-hidden="true">
+                  <ye-icon name="check" [size]="16" />
+                  Marcada
+                </span>
+              }
+            </label>
+          }
+        </fieldset>
+        } @else {
         <fieldset class="options">
           <legend class="visually-hidden">Elige una respuesta</legend>
           @for (o of q.options; track o.id; let i = $index) {
@@ -82,6 +122,7 @@
             </label>
           }
         </fieldset>
+        }
 
         <p class="hint" role="status">{{ hint() }}</p>
         @if (error(); as message) {

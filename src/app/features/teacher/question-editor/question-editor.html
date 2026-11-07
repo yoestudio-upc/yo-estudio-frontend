@@ -55,12 +55,13 @@
               class="form-control"
               formControlName="type"
               aria-describedby="q-type-hint"
+              (change)="onTypeChange()"
             >
-              <option value="single">Elección única</option>
+              @for (t of types; track t[0]) {
+                <option [value]="t[0]">{{ t[1] }}</option>
+              }
             </select>
-            <p class="form-hint" id="q-type-hint">
-              Por ahora solo hay elección única: una sola opción es correcta.
-            </p>
+            <p class="form-hint" id="q-type-hint">{{ typeHint() }}</p>
           </div>
 
           <div class="field">
@@ -101,9 +102,57 @@
         </section>
 
         <section yeCard class="panel" aria-labelledby="options-title">
+          @if (questionType() === 'short') {
+          <div>
+            <h2 id="options-title">Respuestas aceptadas</h2>
+            <p class="form-hint">
+              Escribe las respuestas que cuentan como correctas, por ejemplo «3/4» y «tres cuartos».
+              No importan las tildes, las mayúsculas ni los espacios.
+            </p>
+          </div>
+
+          <ol class="options" role="list" formArrayName="acceptedAnswers">
+            @for (control of form.controls.acceptedAnswers.controls; track control; let i = $index) {
+              <li class="option accepted">
+                <input
+                  [id]="'accepted-' + i"
+                  class="form-control"
+                  type="text"
+                  maxlength="255"
+                  [formControlName]="i"
+                  [attr.aria-label]="'Respuesta aceptada ' + (i + 1)"
+                />
+                <button
+                  type="button"
+                  class="icon-button icon-button--danger"
+                  [attr.aria-label]="'Eliminar respuesta aceptada ' + (i + 1)"
+                  [disabled]="form.controls.acceptedAnswers.length <= 1"
+                  (click)="removeAccepted(i)"
+                >
+                  <ye-icon name="trash" [size]="20" />
+                </button>
+              </li>
+            }
+          </ol>
+
+          @if (form.controls.acceptedAnswers.length < maxAccepted) {
+            <button yeButton variant="dashed" size="sm" type="button" class="add" (click)="addAccepted()">
+              <ye-icon name="plus" [size]="20" />
+              Agregar respuesta aceptada
+            </button>
+          } @else {
+            <p class="form-hint">Máximo {{ maxAccepted }} respuestas aceptadas.</p>
+          }
+          } @else {
           <div>
             <h2 id="options-title">Opciones</h2>
-            <p class="form-hint">Escribe las opciones y marca cuál es la correcta.</p>
+            <p class="form-hint">
+              @switch (questionType()) {
+                @case ('multiple') { Escribe las opciones y marca todas las correctas. }
+                @case ('truefalse') { Marca si la respuesta correcta es Verdadero o Falso. }
+                @default { Escribe las opciones y marca cuál es la correcta. }
+              }
+            </p>
           </div>
 
           <ol class="options" role="list" formArrayName="options">
@@ -115,6 +164,7 @@
                   class="form-control"
                   type="text"
                   formControlName="text"
+                  [readOnly]="questionType() === 'truefalse'"
                   [attr.aria-label]="'Opción ' + letters[i]"
                 />
                 <button
@@ -131,20 +181,24 @@
                   }
                   <span class="visually-hidden"> la opción {{ letters[i] }}</span>
                 </button>
-                <button
-                  type="button"
-                  class="icon-button icon-button--danger"
-                  [attr.aria-label]="'Eliminar opción ' + letters[i]"
-                  [disabled]="form.controls.options.length <= minOptions"
-                  (click)="removeOption(i)"
-                >
-                  <ye-icon name="trash" [size]="20" />
-                </button>
+                @if (questionType() !== 'truefalse') {
+                  <button
+                    type="button"
+                    class="icon-button icon-button--danger"
+                    [attr.aria-label]="'Eliminar opción ' + letters[i]"
+                    [disabled]="form.controls.options.length <= minOptions"
+                    (click)="removeOption(i)"
+                  >
+                    <ye-icon name="trash" [size]="20" />
+                  </button>
+                }
               </li>
             }
           </ol>
 
-          @if (form.controls.options.length < maxOptions) {
+          @if (questionType() === 'truefalse') {
+            <p class="form-hint">Las opciones de verdadero o falso son fijas.</p>
+          } @else if (form.controls.options.length < maxOptions) {
             <button
               yeButton
               variant="dashed"
@@ -158,6 +212,7 @@
             </button>
           } @else {
             <p class="form-hint">Máximo {{ maxOptions }} opciones (A–D).</p>
+          }
           }
 
           <div class="preview" aria-label="Vista previa">
@@ -176,6 +231,9 @@
                 <li>{{ o }}</li>
               }
             </ul>
+            @if (preview().note; as note) {
+              <p class="preview-note">{{ note }}</p>
+            }
           </div>
         </section>
       </form>

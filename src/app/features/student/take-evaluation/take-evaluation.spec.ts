@@ -17,6 +17,7 @@ const DATA: TakeData = {
   subtopics: [{ id: 'st', code: 'sumar', name: 'Sumar fracciones' }],
   questions: [1, 2, 3].map((n) => ({
     id: `q${n}`,
+    type: 'single' as const,
     subtopicId: 'st',
     text: `Pregunta número ${n}`,
     options: [
@@ -124,6 +125,8 @@ describe('TakeEvaluation (04)', () => {
     await settle();
     expect(api['saveProgress']).toHaveBeenCalledWith('e-1', {
       answers: { q1: 'q1-b' },
+      choices: {},
+      texts: {},
       skipped: [],
       currentIndex: 0,
     });
@@ -142,5 +145,70 @@ describe('TakeEvaluation (04)', () => {
     const { fixture } = await render();
     await fixture.componentInstance.beforeLeave();
     expect(api['saveProgress']).toHaveBeenCalled();
+  });
+
+  const MIXED: TakeData = {
+    ...DATA,
+    readingText: null,
+    questions: [
+      {
+        id: 'm',
+        type: 'multiple',
+        subtopicId: 'st',
+        text: 'Marca las equivalentes a 1/2',
+        options: [
+          { id: 'm-a', text: '2/4' },
+          { id: 'm-b', text: '3/6' },
+          { id: 'm-c', text: '1/3' },
+        ],
+      },
+      { id: 's', type: 'short', subtopicId: 'st', text: 'Escribe 3/4 con palabras', options: [] },
+    ],
+  };
+
+  it('opción múltiple: casillas que se marcan y desmarcan', async () => {
+    const { el, fixture, settle, button } = await render(MIXED);
+    expect(el.querySelector('legend')?.textContent).toContain('Puedes marcar varias');
+    const boxes = () => [...el.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')];
+    boxes()[0].click();
+    boxes()[1].click();
+    boxes()[0].click();
+    await fixture.whenStable();
+    expect(boxes().map((b) => b.checked)).toEqual([false, true, false]);
+    button('Siguiente').click();
+    await settle();
+    const input = el.querySelector<HTMLInputElement>('#short-answer')!;
+    input.value = 'tres cuartos';
+    input.dispatchEvent(new Event('input'));
+    await fixture.whenStable();
+    button('Terminar evaluación').click();
+    await settle();
+    expect(api['submit']).toHaveBeenCalledWith(
+      'e-1',
+      expect.objectContaining({ choices: { m: ['m-b'] }, texts: { s: 'tres cuartos' } }),
+    );
+  });
+
+  it('respuesta corta: un campo de texto y sin opciones', async () => {
+    const { el, fixture, button, settle } = await render(MIXED);
+    button('Siguiente').click();
+    await settle();
+    expect(el.querySelector('#short-answer')).not.toBeNull();
+    expect(el.querySelectorAll('.option').length).toBe(0);
+    await fixture.whenStable();
+  });
+
+  it('una respuesta corta en blanco cuenta como sin responder', async () => {
+    const { el, button, settle } = await render(MIXED);
+    button('Siguiente').click();
+    await settle();
+    const input = el.querySelector<HTMLInputElement>('#short-answer')!;
+    input.value = '   ';
+    input.dispatchEvent(new Event('input'));
+    button('Terminar evaluación').click();
+    await settle();
+    expect(TestBed.inject(Confirm).ask).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Te faltan 2 preguntas' }),
+    );
   });
 });

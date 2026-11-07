@@ -13,6 +13,7 @@ import { TeacherEvaluationHttpApi } from './teacher-evaluation.http';
 const BACKEND_QUESTION = {
   id: 11,
   type: 'single',
+  acceptedAnswers: [],
   text: '¿Cuál es equivalente a 1/2?',
   points: 2,
   subtopicId: 5,
@@ -25,6 +26,7 @@ const BACKEND_QUESTION = {
 const QUESTION: TeacherQuestion = {
   id: '11',
   type: 'single',
+  acceptedAnswers: [],
   text: '¿Cuál es equivalente a 1/2?',
   points: 2,
   subtopicId: '5',
@@ -132,6 +134,7 @@ describe('TeacherEvaluationHttpApi', () => {
   it('agrega, edita y borra preguntas', () => {
     const draft = {
       type: 'single' as const,
+      acceptedAnswers: [],
       subtopicId: '5',
       text: 'x',
       points: 2,
@@ -162,5 +165,25 @@ describe('TeacherEvaluationHttpApi', () => {
       .expectOne('/api/teachers/me/evaluations/7/publish')
       .flush({ problems: ['Agrega al menos una pregunta.'] }, { status: 422, statusText: '' });
     expect(problems).toEqual(['Agrega al menos una pregunta.']);
+  });
+
+  it('respuesta corta: envía y recibe las respuestas aceptadas', () => {
+    let added: TeacherQuestion | undefined;
+    api
+      .addQuestion('7', {
+        type: 'short',
+        subtopicId: '5',
+        text: 'Escribe 3/4',
+        points: 2,
+        options: [],
+        acceptedAnswers: ['tres cuartos', '3/4'],
+      })
+      .subscribe((r) => (added = r));
+    const req = backend.expectOne('/api/teachers/me/evaluations/7/questions');
+    expect(req.request.body.acceptedAnswers).toEqual(['tres cuartos', '3/4']);
+    req.flush({ ...BACKEND_QUESTION, type: 'short', options: [], acceptedAnswers: ['tres cuartos', '3/4'] });
+    expect(added?.type).toBe('short');
+    expect(added?.options).toEqual([]);
+    expect(added?.acceptedAnswers).toEqual(['tres cuartos', '3/4']);
   });
 });

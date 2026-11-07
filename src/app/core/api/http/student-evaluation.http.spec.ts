@@ -5,8 +5,14 @@ import { EvaluationResult, TakeEvaluation, TakeProgress } from '../../models/dto
 import { API_URL } from '../api-url';
 import { StudentEvaluationHttpApi } from './student-evaluation.http';
 
-const PROGRESS: TakeProgress = { answers: { '11': '21' }, skipped: ['12'], currentIndex: 1 };
-const BACKEND_PROGRESS = { answers: { '11': 21 }, skipped: [12], currentIndex: 1 };
+const PROGRESS: TakeProgress = {
+  answers: { '11': '21' },
+  choices: {},
+  texts: {},
+  skipped: ['12'],
+  currentIndex: 1,
+};
+const BACKEND_PROGRESS = { answers: { '11': 21 }, choices: {}, texts: {}, skipped: [12], currentIndex: 1 };
 
 const BACKEND_RESULT = {
   evaluationId: 7,
@@ -119,5 +125,38 @@ describe('StudentEvaluationHttpApi', () => {
     api.getForTaking('7').subscribe({ error: (e) => (status = e.status) });
     backend.expectOne('/api/students/me/evaluations/7').flush(null, { status: 409, statusText: '' });
     expect(status).toBe(409);
+  });
+
+  it('opción múltiple y respuesta corta: convierte choices y texts', () => {
+    const progress: TakeProgress = {
+      answers: {},
+      choices: { '11': ['21', '22'] },
+      texts: { '12': 'tres cuartos' },
+      skipped: [],
+      currentIndex: 0,
+    };
+    api.saveProgress('7', progress).subscribe();
+    const req = backend.expectOne('/api/students/me/evaluations/7/progress');
+    expect(req.request.body.choices).toEqual({ '11': [21, 22] });
+    expect(req.request.body.texts).toEqual({ '12': 'tres cuartos' });
+    req.flush(null, { status: 204, statusText: 'No Content' });
+
+    let taken: TakeEvaluation | undefined;
+    api.getForTaking('7').subscribe((r) => (taken = r));
+    backend.expectOne('/api/students/me/evaluations/7').flush({
+      id: 7,
+      classId: 3,
+      name: 'Tipos',
+      endDate: null,
+      readingTitle: null,
+      readingText: null,
+      topic: { id: 4, code: 'fracciones', name: 'Fracciones' },
+      subtopics: [],
+      questions: [{ id: 12, type: 'short', subtopicId: 5, text: 'Escribe', options: [] }],
+      progress: { answers: {}, choices: { '11': [21, 22] }, texts: { '12': 'tres' }, skipped: [], currentIndex: 0 },
+    });
+    expect(taken?.questions[0].type).toBe('short');
+    expect(taken?.progress?.choices).toEqual({ '11': ['21', '22'] });
+    expect(taken?.progress?.texts).toEqual({ '12': 'tres' });
   });
 });

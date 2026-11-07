@@ -2,6 +2,7 @@ import { AnswerEvent } from '../answer-event';
 import { Class } from '../class';
 import { Level } from '../level';
 import { Evaluation } from '../evaluation';
+import { QuestionType } from '../question';
 import { TagRef } from './teacher.dto';
 
 // Formas que devuelven los endpoints del portal estudiante.
@@ -49,14 +50,20 @@ export interface JoinClassRequest {
 // GET /evaluations/:id → para rendir (sin la respuesta correcta ni puntos)
 export interface TakeQuestion {
   id: string;
+  type: QuestionType;
   subtopicId: string;
   text: string;
+  // Vacío en respuesta corta (las respuestas aceptadas nunca llegan al alumno)
   options: { id: string; text: string }[];
 }
 
 export interface TakeProgress {
-  // questionId → optionId elegida
+  // Elección única y verdadero o falso: questionId → optionId elegida
   answers: Record<string, string>;
+  // Opción múltiple: questionId → optionIds marcadas
+  choices?: Record<string, string[]>;
+  // Respuesta corta: questionId → lo que escribió
+  texts?: Record<string, string>;
   // Preguntas que dejó para después
   skipped: string[];
   currentIndex: number;

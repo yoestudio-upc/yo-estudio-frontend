@@ -46,6 +46,7 @@ describe('TeacherEvaluationMockApi', () => {
 
     const question: QuestionDraft = {
       type: 'single',
+      acceptedAnswers: [],
       subtopicId: 'tag-perimetro',
       text: '¿Cuál es el perímetro de un cuadrado de 2 cm de lado?',
       points: 1,
@@ -65,6 +66,7 @@ describe('TeacherEvaluationMockApi', () => {
       firstValueFrom(
         api.addQuestion('e-perimetro-area', {
           type: 'single',
+          acceptedAnswers: [],
           subtopicId: 'tag-sumar-fracciones',
           text: 'x',
           points: 1,

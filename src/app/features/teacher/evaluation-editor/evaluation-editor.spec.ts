@@ -36,6 +36,7 @@ const EXISTING: TeacherEvaluationDetail = {
     {
       id: 'q-1',
       type: 'single',
+      acceptedAnswers: [],
       subtopicId: 'st-sumar',
       text: '¿Cuánto es 1/4 + 2/4?',
       points: 2,

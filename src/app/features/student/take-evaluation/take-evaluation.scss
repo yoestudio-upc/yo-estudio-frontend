@@ -354,3 +354,27 @@
     font-size: 17px;
   }
 }
+
+// HU13 · Opción múltiple y respuesta corta
+.multi-hint {
+  grid-column: 1 / -1;
+  margin-bottom: var(--space-2);
+  font-weight: 800;
+  color: var(--text-2);
+}
+
+.short-answer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.short-label {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.short-input {
+  min-height: 60px;
+  font-size: 22px;
+}

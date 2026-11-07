@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AuthService } from '../../auth/auth.service';
 import { EvaluationReport, StudentDiagnostic } from '../../models/dto/teacher.dto';
+import { isCorrectAnswer } from '../../domain/question-rules';
 import { TeacherReportsApi } from '../teacher-reports.api';
 import { TEACHER_PROFILE_NOTE } from './data/recommendation';
 import { diagnose } from './diagnostics';
@@ -31,9 +32,7 @@ export class TeacherReportsMockApi extends TeacherReportsApi {
         name,
         done: !!result,
         correctCount: result
-          ? e.questions.filter((q) =>
-              q.options.some((o) => o.correct && o.id === result.answers[q.id]),
-            ).length
+          ? e.questions.filter((q) => isCorrectAnswer(q, result.answers[q.id] ?? null)).length
           : null,
         topicLevel: diagnostic?.topicLevel ?? null,
         subtopics: this.db

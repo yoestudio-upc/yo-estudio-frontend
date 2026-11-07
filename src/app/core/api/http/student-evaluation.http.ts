@@ -15,6 +15,8 @@ import { BackendTopicRef, toTagRefs } from './course-dto';
 // Formas del backend: mismos campos que los DTO, con ids numéricos
 interface BackendProgress {
   answers: Record<string, number>;
+  choices?: Record<string, number[]>;
+  texts?: Record<string, string>;
   skipped: number[];
   currentIndex: number;
 }
@@ -30,6 +32,7 @@ interface BackendTakeEvaluation {
   subtopics: BackendTopicRef[];
   questions: {
     id: number;
+    type: TakeEvaluation['questions'][number]['type'];
     subtopicId: number | null;
     text: string;
     options: { id: number; text: string }[];
@@ -70,6 +73,7 @@ export class StudentEvaluationHttpApi extends StudentEvaluationApi {
         subtopics: toTagRefs(e.subtopics),
         questions: e.questions.map((q) => ({
           id: String(q.id),
+          type: q.type,
           subtopicId: q.subtopicId === null ? '' : String(q.subtopicId),
           text: q.text,
           options: q.options.map((o) => ({ id: String(o.id), text: o.text })),
@@ -104,6 +108,8 @@ export class StudentEvaluationHttpApi extends StudentEvaluationApi {
 function toBackendProgress(p: TakeProgress): BackendProgress {
   return {
     answers: Object.fromEntries(Object.entries(p.answers).map(([q, o]) => [q, Number(o)])),
+    choices: Object.fromEntries(Object.entries(p.choices ?? {}).map(([q, os]) => [q, os.map(Number)])),
+    texts: { ...p.texts },
     skipped: p.skipped.map(Number),
     currentIndex: p.currentIndex,
   };
@@ -112,6 +118,8 @@ function toBackendProgress(p: TakeProgress): BackendProgress {
 function fromBackendProgress(p: BackendProgress): TakeProgress {
   return {
     answers: Object.fromEntries(Object.entries(p.answers).map(([q, o]) => [q, String(o)])),
+    choices: Object.fromEntries(Object.entries(p.choices ?? {}).map(([q, os]) => [q, os.map(String)])),
+    texts: { ...p.texts },
     skipped: p.skipped.map(String),
     currentIndex: p.currentIndex,
   };

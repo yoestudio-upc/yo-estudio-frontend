@@ -16,9 +16,13 @@ import { rxResource } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
 import { StudentEvaluationApi } from '../../../core/api/student-evaluation.api';
-import { OPTION_LETTERS } from '../../../core/domain/question-rules';
+import { OPTION_LETTERS, isAnswered } from '../../../core/domain/question-rules';
 import { BeforeLeave } from '../../../core/layout/before-leave.guard';
-import { TakeEvaluation as TakeData, TakeProgress } from '../../../core/models/dto/student.dto';
+import {
+  TakeEvaluation as TakeData,
+  TakeProgress,
+  TakeQuestion,
+} from '../../../core/models/dto/student.dto';
 import { topicStyle } from '../../../shared/topic/topic-style';
 import { Button } from '../../../shared/ui/button/button';
 import { Card } from '../../../shared/ui/card/card';
@@ -61,6 +65,9 @@ export class TakeEvaluation implements BeforeLeave {
 
   protected readonly index = signal(0);
   protected readonly answers = signal<Record<string, string>>({});
+  // HU13: opción múltiple y respuesta corta
+  protected readonly choices = signal<Record<string, string[]>>({});
+  protected readonly texts = signal<Record<string, string>>({});
   protected readonly skipped = signal<string[]>([]);
   private readonly seen = signal<string[]>([]);
   protected readonly hint = signal<string | null>(null);
@@ -78,7 +85,7 @@ export class TakeEvaluation implements BeforeLeave {
   );
   protected readonly states = computed<QuestionState[]>(() =>
     this.questions().map((q) =>
-      this.answers()[q.id]
+      this.answered(q)
         ? 'answered'
         : this.skipped().includes(q.id) || this.seen().includes(q.id)
           ? 'later'
@@ -86,7 +93,7 @@ export class TakeEvaluation implements BeforeLeave {
     ),
   );
   protected readonly unanswered = computed(
-    () => this.questions().filter((q) => !this.answers()[q.id]).length,
+    () => this.questions().filter((q) => !this.answered(q)).length,
   );
   protected readonly loadError = computed(() => {
     const e = this.data.error();
@@ -132,7 +139,41 @@ export class TakeEvaluation implements BeforeLeave {
 
   protected isChosen(optionId: string): boolean {
     const q = this.question();
-    return !!q && this.answers()[q.id] === optionId;
+    if (!q) return false;
+    return q.type === 'multiple'
+      ? (this.choices()[q.id] ?? []).includes(optionId)
+      : this.answers()[q.id] === optionId;
+  }
+
+  // Opción múltiple: marca o desmarca
+  protected toggle(optionId: string): void {
+    const q = this.question();
+    if (!q) return;
+    const current = this.choices()[q.id] ?? [];
+    const next = current.includes(optionId)
+      ? current.filter((id) => id !== optionId)
+      : [...current, optionId];
+    this.choices.update((c) => ({ ...c, [q.id]: next }));
+    if (next.length) this.skipped.update((s) => s.filter((id) => id !== q.id));
+    this.recorder?.select(q.id, [...next].sort().join(','));
+  }
+
+  // Respuesta corta: se guarda mientras escribe
+  protected write(value: string): void {
+    const q = this.question();
+    if (!q) return;
+    this.texts.update((t) => ({ ...t, [q.id]: value }));
+    if (value.trim()) this.skipped.update((s) => s.filter((id) => id !== q.id));
+  }
+
+  // Al salir del campo cuenta como un cambio de respuesta si escribió algo distinto
+  protected commitText(): void {
+    const q = this.question();
+    if (q) this.recorder?.select(q.id, (this.texts()[q.id] ?? '').trim());
+  }
+
+  protected textOf(questionId: string): string {
+    return this.texts()[questionId] ?? '';
   }
 
   protected choose(optionId: string): void {
@@ -169,14 +210,14 @@ export class TakeEvaluation implements BeforeLeave {
       return;
     }
     // En la última: lleva a la primera que falte, o recuerda que puede terminar
-    const missing = this.questions().findIndex((q) => !this.answers()[q.id]);
+    const missing = this.questions().findIndex((q) => !this.answered(q));
     if (missing >= 0 && missing !== this.index()) this.goTo(missing);
     else this.hint.set('¡Llegaste al final! Cuando quieras, pulsa «Terminar evaluación».');
   }
 
   protected later(): void {
     const q = this.question();
-    if (q && !this.answers()[q.id]) {
+    if (q && !this.answered(q)) {
       this.skipped.update((s) => (s.includes(q.id) ? s : [...s, q.id]));
       this.recorder?.skip(q.id);
     }
@@ -228,17 +269,48 @@ export class TakeEvaluation implements BeforeLeave {
 
   private start(loaded: TakeData): void {
     const saved = loaded.progress;
-    const seen = [...Object.keys(saved?.answers ?? {}), ...(saved?.skipped ?? [])];
+    const seen = [
+      ...Object.keys(saved?.answers ?? {}),
+      ...Object.keys(saved?.choices ?? {}),
+      ...Object.keys(saved?.texts ?? {}),
+      ...(saved?.skipped ?? []),
+    ];
     this.answers.set({ ...saved?.answers });
+    this.choices.set({ ...saved?.choices });
+    this.texts.set({ ...saved?.texts });
     this.skipped.set(saved?.skipped ?? []);
     this.seen.set(seen);
-    this.recorder = new TelemetryRecorder(undefined, seen, saved?.answers ?? {});
+    // Última respuesta conocida de cada pregunta, para contar los cambios
+    const last = {
+      ...saved?.answers,
+      ...Object.fromEntries(
+        Object.entries(saved?.choices ?? {}).map(([q, ids]) => [q, [...ids].sort().join(',')]),
+      ),
+      ...Object.fromEntries(Object.entries(saved?.texts ?? {}).map(([q, t]) => [q, t.trim()])),
+    };
+    this.recorder = new TelemetryRecorder(undefined, seen, last);
     const index = Math.min(saved?.currentIndex ?? 0, loaded.questions.length - 1);
     this.goTo(Math.max(index, 0), false);
   }
 
   private progress(): TakeProgress {
-    return { answers: this.answers(), skipped: this.skipped(), currentIndex: this.index() };
+    return {
+      answers: this.answers(),
+      choices: this.choices(),
+      texts: this.texts(),
+      skipped: this.skipped(),
+      currentIndex: this.index(),
+    };
+  }
+
+  private answered(q: TakeQuestion): boolean {
+    return isAnswered(q, {
+      answers: this.answers(),
+      choices: this.choices(),
+      texts: this.texts(),
+      skipped: [],
+      currentIndex: 0,
+    });
   }
 
   private async persist(): Promise<void> {

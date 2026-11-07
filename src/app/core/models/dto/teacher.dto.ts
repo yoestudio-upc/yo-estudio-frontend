@@ -57,7 +57,10 @@ export interface TeacherEvaluationSummary extends Evaluation {
 }
 
 export interface TeacherQuestion extends Omit<Question, 'evaluationId'> {
+  // Vacío en respuesta corta
   options: Omit<Option, 'questionId'>[];
+  // Solo respuesta corta
+  acceptedAnswers: string[];
 }
 
 // GET /teacher/evaluations/:id
@@ -84,7 +87,10 @@ export interface QuestionDraft {
   subtopicId: string | null;
   text: string;
   points: number | null;
+  // Elección única, verdadero o falso y opción múltiple
   options: { text: string; correct: boolean }[];
+  // Respuesta corta (1 a 5)
+  acceptedAnswers: string[];
 }
 
 // ── Resultados por alumno (única vista con riesgo; solo docente) ──

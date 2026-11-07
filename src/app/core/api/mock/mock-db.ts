@@ -2,6 +2,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, delay, mergeMap, of, throwError, timer } from 'rxjs';
 import { levelOf } from '../../domain/level-rules';
+import { isCorrectAnswer } from '../../domain/question-rules';
 import { AnswerEvent } from '../../models/answer-event';
 import { Goal, ResponseProfile, TakeProgress } from '../../models/dto/student.dto';
 import { TagRef } from '../../models/dto/teacher.dto';
@@ -158,7 +159,7 @@ export class MockDb {
         const chosen = result.answers[question.id] ?? null;
         const t = tally.get(question.subtopicId) ?? { correct: 0, attempts: 0 };
         t.attempts++;
-        if (question.options.some((o) => o.id === chosen && o.correct)) t.correct++;
+        if (isCorrectAnswer(question, chosen)) t.correct++;
         tally.set(question.subtopicId, t);
       }
     }

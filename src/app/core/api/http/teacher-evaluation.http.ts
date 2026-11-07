@@ -33,6 +33,7 @@ interface BackendQuestion {
   points: number;
   subtopicId: number | null;
   options: { id: number; text: string; correct: boolean }[];
+  acceptedAnswers: string[];
 }
 
 interface BackendEvaluationDetail extends BackendEvaluation {
@@ -159,5 +160,6 @@ function toQuestion(q: BackendQuestion): TeacherQuestion {
     // El backend siempre guarda el subtema; '' solo si faltara
     subtopicId: q.subtopicId === null ? '' : String(q.subtopicId),
     options: q.options.map((o) => ({ id: String(o.id), text: o.text, correct: o.correct })),
+    acceptedAnswers: q.acceptedAnswers ?? [],
   };
 }

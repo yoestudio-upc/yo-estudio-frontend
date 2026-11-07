@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AuthService } from '../../auth/auth.service';
 import { evaluationProblems } from '../../domain/evaluation-rules';
-import { questionProblems } from '../../domain/question-rules';
+import { TRUE_FALSE_LABELS, questionProblems } from '../../domain/question-rules';
 import {
   EvaluationDraft,
   QuestionDraft,
@@ -111,7 +111,7 @@ export class TeacherEvaluationMockApi extends TeacherEvaluationApi {
     const question = this.toQuestion(this.db.newId('q'), draft);
     found.questions.push(question);
     this.db.save();
-    return respond(question);
+    return respond(this.toTeacherQuestion(question));
   }
 
   updateQuestion(
@@ -127,7 +127,7 @@ export class TeacherEvaluationMockApi extends TeacherEvaluationApi {
     if (problems.length) return fail(422, { problems });
     found.questions[index] = this.toQuestion(questionId, draft);
     this.db.save();
-    return respond(found.questions[index]);
+    return respond(this.toTeacherQuestion(found.questions[index]));
   }
 
   deleteQuestion(evaluationId: string, questionId: string): Observable<void> {
@@ -167,18 +167,30 @@ export class TeacherEvaluationMockApi extends TeacherEvaluationApi {
     };
   }
 
+  // Igual que el backend: V/F con textos fijos y respuestas aceptadas como opciones correctas
   private toQuestion(id: string, draft: QuestionDraft): MockQuestion {
+    const options =
+      draft.type === 'short'
+        ? draft.acceptedAnswers.filter((a) => a.trim()).map((a) => ({ text: a.trim(), correct: true }))
+        : draft.type === 'truefalse'
+          ? TRUE_FALSE_LABELS.map((text, i) => ({ text, correct: !!draft.options[i]?.correct }))
+          : draft.options.map((o) => ({ text: o.text.trim(), correct: o.correct }));
     return {
       id,
-      type: 'single',
+      type: draft.type,
       subtopicId: draft.subtopicId!,
       text: draft.text.trim(),
       points: draft.points!,
-      options: draft.options.map((o, i) => ({
-        id: `${id}-o${i}`,
-        text: o.text.trim(),
-        correct: o.correct,
-      })),
+      options: options.map((o, i) => ({ id: `${id}-o${i}`, ...o })),
+    };
+  }
+
+  private toTeacherQuestion(q: MockQuestion): TeacherQuestion {
+    const short = q.type === 'short';
+    return {
+      ...q,
+      options: short ? [] : q.options,
+      acceptedAnswers: short ? q.options.map((o) => o.text) : [],
     };
   }
 
@@ -192,7 +204,7 @@ export class TeacherEvaluationMockApi extends TeacherEvaluationApi {
       status: this.db.statusOf(e),
       topic: this.db.tagRef(e.topicId),
       subtopics: this.db.tagRefs(e.subtopicIds),
-      questions: e.questions,
+      questions: e.questions.map((q) => this.toTeacherQuestion(q)),
       readingTitle: e.readingTitle,
       readingText: e.readingText,
     };

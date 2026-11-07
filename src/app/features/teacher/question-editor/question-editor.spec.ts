@@ -24,6 +24,7 @@ const EVALUATION: TeacherEvaluationDetail = {
     {
       id: 'q-1',
       type: 'single',
+      acceptedAnswers: [],
       subtopicId: 'st-comparar',
       text: '¿Cuál es mayor?',
       points: 1,
@@ -135,6 +136,7 @@ describe('QuestionEditor (D3)', () => {
 
     expect(api['addQuestion']).toHaveBeenCalledWith('e-1', {
       type: 'single',
+      acceptedAnswers: [],
       subtopicId: 'st-sumar',
       text: '¿Cuánto es 1/4 + 2/4?',
       points: 1,
@@ -152,5 +154,63 @@ describe('QuestionEditor (D3)', () => {
     expect(el.querySelector<HTMLInputElement>('#option-2')!.value).toBe('Son iguales');
     expect(el.querySelector('.preview')?.textContent).toContain('A) 3/5');
     expect(el.querySelector('.mark[aria-pressed="true"]')?.textContent).toContain('Correcta');
+  });
+
+  async function chooseType(el: HTMLElement, fixture: { whenStable(): Promise<unknown> }, value: string) {
+    const select = el.querySelector<HTMLSelectElement>('#q-type')!;
+    select.value = value;
+    select.dispatchEvent(new Event('change'));
+    await fixture.whenStable();
+  }
+
+  it('ofrece los cuatro tipos de pregunta', async () => {
+    const { el } = await render();
+    expect([...el.querySelectorAll('#q-type option')].map((o) => o.textContent?.trim())).toEqual([
+      'Elección única',
+      'Verdadero o falso',
+      'Opción múltiple',
+      'Respuesta corta',
+    ]);
+  });
+
+  it('verdadero o falso: dos opciones fijas y una correcta', async () => {
+    const { el, fixture } = await render();
+    await chooseType(el, fixture, 'truefalse');
+    const inputs = [...el.querySelectorAll<HTMLInputElement>('.option input')];
+    expect(inputs.map((i) => i.value)).toEqual(['Verdadero', 'Falso']);
+    expect(inputs.every((i) => i.readOnly)).toBe(true);
+    expect(el.querySelector('[aria-label^="Eliminar opción"]')).toBeNull();
+  });
+
+  it('opción múltiple deja marcar varias correctas', async () => {
+    const { el, fixture } = await render();
+    await chooseType(el, fixture, 'multiple');
+    const marks = () => [...el.querySelectorAll<HTMLButtonElement>('.mark')];
+    marks()[0].click();
+    marks()[2].click();
+    await fixture.whenStable();
+    expect(marks().map((m) => m.getAttribute('aria-pressed'))).toEqual(['true', 'false', 'true', 'false']);
+  });
+
+  it('respuesta corta guarda las respuestas aceptadas y ninguna opción', async () => {
+    const { el, fixture, type, submit } = await render();
+    await chooseType(el, fixture, 'short');
+    const select = el.querySelector<HTMLSelectElement>('#q-subtopic')!;
+    select.value = select.options[1].value;
+    select.dispatchEvent(new Event('change'));
+    type('#q-text', 'Escribe 3/4 con palabras');
+    type('#accepted-0', 'tres cuartos');
+    el.querySelector<HTMLButtonElement>('button.add')!.click();
+    await fixture.whenStable();
+    type('#accepted-1', ' 3/4 ');
+    await submit();
+    expect(api['addQuestion']).toHaveBeenCalledWith('e-1', {
+      type: 'short',
+      subtopicId: 'st-sumar',
+      text: 'Escribe 3/4 con palabras',
+      points: 1,
+      options: [],
+      acceptedAnswers: ['tres cuartos', '3/4'],
+    });
   });
 });

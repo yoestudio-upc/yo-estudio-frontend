@@ -1,6 +1,12 @@
 import { EvaluationDraft, QuestionDraft } from '../models/dto/teacher.dto';
 import { evaluationProblems } from './evaluation-rules';
-import { questionProblems } from './question-rules';
+import {
+  isAnswered,
+  isCorrectAnswer,
+  normalizeAnswer,
+  questionProblems,
+  storedAnswer,
+} from './question-rules';
 
 describe('evaluationProblems', () => {
   const subtopics = [
@@ -68,6 +74,7 @@ describe('evaluationProblems', () => {
 describe('questionProblems', () => {
   const valid: QuestionDraft = {
     type: 'single',
+    acceptedAnswers: [],
     subtopicId: 'st-sumar',
     text: '¿Cuánto es 1/4 + 2/4?',
     points: 2,
@@ -100,5 +107,73 @@ describe('questionProblems', () => {
     expect(check({ options: [{ text: '', correct: true }, valid.options[1]] })).toContain(
       'Escribe el texto de todas las opciones.',
     );
+  });
+});
+
+describe('HU13 · tipos de pregunta', () => {
+  const base: QuestionDraft = {
+    type: 'single',
+    subtopicId: 'st',
+    text: '¿Pregunta?',
+    points: 2,
+    options: [],
+    acceptedAnswers: [],
+  };
+  const opts = (...flags: boolean[]) => flags.map((correct, i) => ({ text: `Op ${i}`, correct }));
+
+  it('verdadero o falso: dos opciones y una correcta', () => {
+    expect(questionProblems({ ...base, type: 'truefalse', options: opts(false, false) }, ['st'])).toEqual([
+      'Marca si la respuesta correcta es Verdadero o Falso.',
+    ]);
+    expect(questionProblems({ ...base, type: 'truefalse', options: opts(true, false) }, ['st'])).toEqual([]);
+  });
+
+  it('opción múltiple: al menos una correcta (puede haber varias)', () => {
+    expect(questionProblems({ ...base, type: 'multiple', options: opts(false, false) }, ['st'])).toEqual([
+      'Marca al menos una opción correcta.',
+    ]);
+    expect(questionProblems({ ...base, type: 'multiple', options: opts(true, true, false) }, ['st'])).toEqual([]);
+  });
+
+  it('respuesta corta: de 1 a 5 respuestas aceptadas, sin opciones', () => {
+    expect(questionProblems({ ...base, type: 'short', acceptedAnswers: ['  '] }, ['st'])).toEqual([
+      'Escribe al menos una respuesta aceptada.',
+    ]);
+    expect(
+      questionProblems({ ...base, type: 'short', acceptedAnswers: ['1', '2', '3', '4', '5', '6'] }, ['st']),
+    ).toEqual(['Agrega como máximo 5 respuestas aceptadas.']);
+    expect(questionProblems({ ...base, type: 'short', acceptedAnswers: ['3/4'] }, ['st'])).toEqual([]);
+  });
+
+  it('compara respuestas cortas sin tildes, mayúsculas ni espacios', () => {
+    expect(normalizeAnswer('  Tres  Cuartos ')).toBe(normalizeAnswer('tres cuartos'));
+    expect(normalizeAnswer('Perímetro')).toBe('perimetro');
+    expect(normalizeAnswer('3 / 4')).toBe('3/4');
+  });
+
+  it('califica cada tipo; opción múltiple es todo o nada', () => {
+    const options = [
+      { id: 'a', text: 'A', correct: true },
+      { id: 'b', text: 'B', correct: true },
+      { id: 'c', text: 'C', correct: false },
+    ];
+    const multiple = { id: 'q', type: 'multiple' as const, options };
+    expect(isCorrectAnswer(multiple, 'a,b')).toBe(true);
+    expect(isCorrectAnswer(multiple, 'a')).toBe(false);
+    expect(isCorrectAnswer(multiple, 'a,b,c')).toBe(false);
+    const short = { id: 'q', type: 'short' as const, options: [{ id: 'x', text: 'tres cuartos', correct: true }] };
+    expect(isCorrectAnswer(short, 'Tres Cuartos')).toBe(true);
+    expect(isCorrectAnswer(short, 'cuatro tercios')).toBe(false);
+    expect(isCorrectAnswer({ id: 'q', type: 'single', options }, 'c')).toBe(false);
+    expect(isCorrectAnswer({ id: 'q', type: 'single', options }, null)).toBe(false);
+  });
+
+  it('guarda la respuesta como el backend y sabe si está respondida', () => {
+    const p = { answers: { s: 'o1' }, choices: { m: ['b', 'a'], e: [] }, texts: { t: '  3/4 ', v: '  ' }, skipped: [], currentIndex: 0 };
+    expect(storedAnswer({ id: 'm', type: 'multiple' }, p)).toBe('a,b');
+    expect(storedAnswer({ id: 't', type: 'short' }, p)).toBe('3/4');
+    expect(storedAnswer({ id: 's', type: 'single' }, p)).toBe('o1');
+    expect(isAnswered({ id: 'e', type: 'multiple' }, p)).toBe(false);
+    expect(isAnswered({ id: 'v', type: 'short' }, p)).toBe(false);
   });
 });

@@ -1,8 +1,10 @@
+import { QuestionType } from '../../../models/question';
 import { addDays, todayIso } from '../mock-clock';
 
+// En respuesta corta, options son las respuestas aceptadas (todas correctas), como en el backend
 export interface MockQuestion {
   id: string;
-  type: 'single';
+  type: QuestionType;
   subtopicId: string;
   text: string;
   points: number;
