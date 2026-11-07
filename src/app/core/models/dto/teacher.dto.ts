@@ -20,6 +20,13 @@ export interface StudentRef {
   name: string;
 }
 
+// POST /courses (HU09): el nombre del curso es el del área
+export interface CreateClassRequest {
+  subject: Subject;
+  grade: number;
+  section: string;
+}
+
 // GET /teacher/courses
 export interface TeacherClassSummary extends Omit<Class, 'teacherId'> {
   topics: TagRef[];

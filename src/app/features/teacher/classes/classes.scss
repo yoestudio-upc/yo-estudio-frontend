@@ -15,22 +15,60 @@
   padding: 0 var(--space-5) 0 26px;
 }
 
-.soon-tag {
-  padding: 2px 10px;
-  border-radius: var(--radius-pill);
-  background: var(--surface);
-  color: var(--brand);
-  font-size: var(--fs-caption);
+.create-panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-4) var(--space-5);
+  padding: var(--space-5) var(--space-6);
 }
 
-.soon-hint {
-  margin-top: calc(-1 * var(--space-2));
-  font-weight: 700;
-  color: var(--text-3);
+.create-text {
+  flex-basis: 100%;
 
-  &:empty {
-    display: none;
+  h2 {
+    font-size: 21px;
+    font-weight: 800;
   }
+
+  p {
+    color: var(--text-3);
+  }
+}
+
+.fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  flex: 1 1 420px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1 1 200px;
+}
+
+.field--short {
+  flex: 0 1 120px;
+}
+
+.section-input {
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.create-error {
+  flex-basis: 100%;
+  color: var(--orange-ink);
+  font-weight: 700;
 }
 
 .list {

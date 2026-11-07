@@ -6,22 +6,97 @@
   />
 
   <div class="toolbar">
-    <!-- HU09 (Sprint 3): visible pero aún no disponible -->
-    <button yeButton type="button" class="create" aria-disabled="true" (click)="showSoon.set(true)">
+    <button
+      yeButton
+      type="button"
+      class="create"
+      aria-controls="create-panel"
+      [attr.aria-expanded]="creating()"
+      (click)="creating() ? closeCreate() : openCreate()"
+    >
       <ye-icon name="plus" [size]="22" />
       Crear nuevo curso
-      <span class="soon-tag">Pronto</span>
     </button>
     <ye-search-box placeholder="Buscar un curso" (query)="query.set($event)" />
   </div>
 
-  <p class="soon-hint" role="status">
-    @if (showSoon()) {
-      Muy pronto podrás crear cursos desde aquí.
-    }
-  </p>
+  @if (creating()) {
+    <form
+      id="create-panel"
+      yeCard
+      class="create-panel"
+      (ngSubmit)="create()"
+      novalidate
+      aria-labelledby="create-title"
+    >
+      <div class="create-text">
+        <h2 id="create-title">Crear nuevo curso</h2>
+        <p>Al crearlo te daremos un código para que tus estudiantes se unan.</p>
+      </div>
 
-  @if (classes.isLoading()) {
+      <div class="fields">
+        <label class="field">
+          <span class="form-label">Área</span>
+          <select
+            id="create-subject"
+            class="form-control"
+            name="subject"
+            [ngModel]="subject()"
+            (ngModelChange)="subject.set($event)"
+          >
+            @for (s of subjects; track s[0]) {
+              <option [ngValue]="s[0]">{{ s[1] }}</option>
+            }
+          </select>
+        </label>
+        <label class="field field--short">
+          <span class="form-label">Grado</span>
+          <select
+            class="form-control"
+            name="grade"
+            [ngModel]="grade()"
+            (ngModelChange)="grade.set($event)"
+          >
+            @for (g of grades; track g) {
+              <option [ngValue]="g">{{ g }}.°</option>
+            }
+          </select>
+        </label>
+        <label class="field field--short">
+          <span class="form-label">Sección</span>
+          <input
+            id="create-section"
+            class="form-control section-input"
+            name="section"
+            maxlength="2"
+            autocomplete="off"
+            autocapitalize="characters"
+            spellcheck="false"
+            placeholder="Ej. B"
+            [attr.aria-invalid]="createError() ? 'true' : null"
+            [attr.aria-describedby]="createError() ? 'create-error' : null"
+            [ngModel]="section()"
+            (ngModelChange)="section.set($event)"
+          />
+        </label>
+      </div>
+
+      <div class="actions">
+        <button yeButton type="submit" [attr.aria-busy]="createBusy() || null">Crear curso</button>
+        <button yeButton variant="white" type="button" (click)="closeCreate()">Cancelar</button>
+      </div>
+
+      @if (createError(); as message) {
+        <p id="create-error" class="create-error" role="alert">{{ message }}</p>
+      }
+    </form>
+  }
+
+  @if (notice(); as message) {
+    <p class="form-notice" role="status">{{ message }}</p>
+  }
+
+  @if (classes.isLoading() && !classes.hasValue()) {
     <p class="state" role="status">Cargando tus cursos…</p>
   } @else if (classes.error()) {
     <div yeCard class="state state--error" role="alert">
@@ -55,7 +130,7 @@
           @if (query()) {
             No encontramos cursos con «{{ query() }}».
           } @else {
-            Aún no tienes cursos.
+            Aún no tienes cursos. Crea el primero con «Crear nuevo curso».
           }
         </li>
       }

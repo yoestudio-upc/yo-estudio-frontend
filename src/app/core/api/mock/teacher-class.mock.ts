@@ -1,9 +1,17 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AuthService } from '../../auth/auth.service';
-import { TeacherClassDetail, TeacherClassSummary } from '../../models/dto/teacher.dto';
+import {
+  CreateClassRequest,
+  TeacherClassDetail,
+  TeacherClassSummary,
+} from '../../models/dto/teacher.dto';
+import { SUBJECT_NAMES } from '../../models/tag';
 import { TeacherClassApi } from '../teacher-class.api';
 import { MockDb, fail, respond } from './mock-db';
+
+// Como el backend: sin 0/O ni 1/I para que el código se lea y escriba sin dudas
+const JOIN_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 @Injectable()
 export class TeacherClassMockApi extends TeacherClassApi {
@@ -23,6 +31,34 @@ export class TeacherClassMockApi extends TeacherClassApi {
       return s ? [{ id: s.id, name: s.name }] : [];
     });
     return respond({ ...this.toSummary(found), students });
+  }
+
+  create({ subject, grade, section }: CreateClassRequest): Observable<TeacherClassSummary> {
+    const course: MockDb['classes'][number] = {
+      id: `c-${Date.now()}`,
+      name: SUBJECT_NAMES[subject],
+      subject,
+      grade,
+      section: section.trim().toUpperCase(),
+      teacherId: this.auth.user()?.id ?? '',
+      joinCode: this.newJoinCode(),
+      topicIds: [],
+      studentIds: [],
+    };
+    this.db.classes.push(course);
+    this.db.save();
+    return respond(this.toSummary(course));
+  }
+
+  private newJoinCode(): string {
+    let code: string;
+    do {
+      code = Array.from(
+        { length: 6 },
+        () => JOIN_CODE_ALPHABET[Math.floor(Math.random() * JOIN_CODE_ALPHABET.length)],
+      ).join('');
+    } while (this.db.classes.some((c) => c.joinCode === code));
+    return code;
   }
 
   private ownClasses() {

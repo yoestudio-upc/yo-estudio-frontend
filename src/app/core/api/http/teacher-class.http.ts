@@ -1,9 +1,23 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
-import { TeacherClassDetail, TeacherClassSummary } from '../../models/dto/teacher.dto';
+import { Observable, map } from 'rxjs';
+import {
+  CreateClassRequest,
+  TeacherClassDetail,
+  TeacherClassSummary,
+} from '../../models/dto/teacher.dto';
 import { API_URL } from '../api-url';
 import { TeacherClassApi } from '../teacher-class.api';
+import { BackendCourse, toTagRefs } from './course-dto';
+
+interface BackendTeacherCourse extends BackendCourse {
+  joinCode: string;
+  studentCount: number;
+}
+
+interface BackendTeacherCourseDetail extends BackendTeacherCourse {
+  students: { id: number; name: string }[];
+}
 
 @Injectable()
 export class TeacherClassHttpApi extends TeacherClassApi {
@@ -11,10 +25,38 @@ export class TeacherClassHttpApi extends TeacherClassApi {
   private readonly apiUrl = inject(API_URL);
 
   getMyClasses(): Observable<TeacherClassSummary[]> {
-    return this.http.get<TeacherClassSummary[]>(`${this.apiUrl}/teacher/courses`);
+    return this.http
+      .get<BackendTeacherCourse[]>(`${this.apiUrl}/teachers/me/courses`)
+      .pipe(map((courses) => courses.map(toSummary)));
   }
 
   getClass(classId: string): Observable<TeacherClassDetail> {
-    return this.http.get<TeacherClassDetail>(`${this.apiUrl}/teacher/courses/${classId}`);
+    return this.http
+      .get<BackendTeacherCourseDetail>(`${this.apiUrl}/teachers/me/courses/${classId}`)
+      .pipe(
+        map((c) => ({
+          ...toSummary(c),
+          students: c.students.map((s) => ({ id: String(s.id), name: s.name })),
+        })),
+      );
   }
+
+  create(request: CreateClassRequest): Observable<TeacherClassSummary> {
+    return this.http
+      .post<BackendTeacherCourse>(`${this.apiUrl}/courses`, request)
+      .pipe(map(toSummary));
+  }
+}
+
+function toSummary(c: BackendTeacherCourse): TeacherClassSummary {
+  return {
+    id: String(c.id),
+    name: c.name,
+    subject: c.subject,
+    grade: c.grade,
+    section: c.section,
+    joinCode: c.joinCode,
+    topics: toTagRefs(c.topics),
+    studentCount: c.studentCount,
+  };
 }
