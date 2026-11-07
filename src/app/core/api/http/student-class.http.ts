@@ -1,14 +1,36 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable, map } from 'rxjs';
-import { StudentClassOverview, StudentClassSummary } from '../../models/dto/student.dto';
+import { Observable, forkJoin, map } from 'rxjs';
+import {
+  StudentClassOverview,
+  StudentClassSummary,
+  StudentEvaluationSummary,
+} from '../../models/dto/student.dto';
 import { API_URL } from '../api-url';
 import { StudentClassApi } from '../student-class.api';
-import { BackendCourse, toTagRefs } from './course-dto';
+import { BackendCourse, BackendTopicRef, toTagRefs } from './course-dto';
 
 interface BackendStudentCourse extends BackendCourse {
   teacherName: string;
   pendingCount: number;
+}
+
+interface BackendStudentEvaluation {
+  id: number;
+  name: string;
+  startDate: string | null;
+  endDate: string | null;
+  topic: BackendTopicRef;
+  subtopics: BackendTopicRef[];
+  questionCount: number;
+  inProgress: boolean;
+  done: boolean;
+}
+
+interface BackendCourseEvaluations {
+  pending: BackendStudentEvaluation[];
+  done: BackendStudentEvaluation[];
+  lastEvaluationName: string | null;
 }
 
 @Injectable()
@@ -22,16 +44,20 @@ export class StudentClassHttpApi extends StudentClassApi {
       .pipe(map((courses) => courses.map(toSummary)));
   }
 
-  // El backend aún no tiene evaluaciones (HU02) ni metas (HU07): el resumen va vacío
+  // Curso + sus evaluaciones. Metas y subtemas logrados llegan con el módulo ML (HU04/HU07).
   getOverview(classId: string): Observable<StudentClassOverview> {
-    return this.http.get<BackendStudentCourse>(`${this.apiUrl}/students/me/courses/${classId}`).pipe(
-      map((c) => ({
-        course: toSummary(c),
-        pending: [],
-        done: [],
+    const base = `${this.apiUrl}/students/me/courses/${classId}`;
+    return forkJoin({
+      course: this.http.get<BackendStudentCourse>(base),
+      evaluations: this.http.get<BackendCourseEvaluations>(`${base}/evaluations`),
+    }).pipe(
+      map(({ course, evaluations }) => ({
+        course: toSummary(course),
+        pending: evaluations.pending.map(toEvaluationSummary),
+        done: evaluations.done.map(toEvaluationSummary),
         nextGoal: null,
         achievedCount: 0,
-        lastEvaluationName: null,
+        lastEvaluationName: evaluations.lastEvaluationName,
       })),
     );
   }
@@ -53,5 +79,19 @@ function toSummary(c: BackendStudentCourse): StudentClassSummary {
     teacherName: c.teacherName,
     topics: toTagRefs(c.topics),
     pendingCount: c.pendingCount,
+  };
+}
+
+function toEvaluationSummary(e: BackendStudentEvaluation): StudentEvaluationSummary {
+  return {
+    id: String(e.id),
+    name: e.name,
+    startDate: e.startDate,
+    endDate: e.endDate,
+    topic: toTagRefs([e.topic])[0],
+    subtopics: toTagRefs(e.subtopics),
+    questionCount: e.questionCount,
+    inProgress: e.inProgress,
+    done: e.done,
   };
 }
