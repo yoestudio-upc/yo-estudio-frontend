@@ -20,6 +20,12 @@ export interface StudentRef {
   name: string;
 }
 
+// Docente de un curso (HU12)
+export interface TeacherRef {
+  id: string;
+  name: string;
+}
+
 // POST /courses (HU09): el nombre del curso es el del área
 export interface CreateClassRequest {
   subject: Subject;
@@ -36,6 +42,8 @@ export interface TeacherClassSummary extends Omit<Class, 'teacherId'> {
 // GET /teacher/courses/:id
 export interface TeacherClassDetail extends TeacherClassSummary {
   students: StudentRef[];
+  // La creadora primero
+  teachers: TeacherRef[];
 }
 
 // GET /teacher/courses/:id/evaluations

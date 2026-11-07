@@ -5,6 +5,7 @@ import {
   CreateClassRequest,
   TeacherClassDetail,
   TeacherClassSummary,
+  TeacherRef,
 } from '../../models/dto/teacher.dto';
 import { SUBJECT_NAMES } from '../../models/tag';
 import { TeacherClassApi } from '../teacher-class.api';
@@ -13,10 +14,16 @@ import { MockDb, fail, respond } from './mock-db';
 // Como el backend: sin 0/O ni 1/I para que el código se lea y escriba sin dudas
 const JOIN_CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
+// Cuentas para probar "Agregar docente" con mocks (solo existe este directorio en el mock)
+const MOCK_TEACHER_ACCOUNTS: Record<string, string> = { 'luis.paz': 'Luis Paz' };
+const MOCK_STUDENT_ACCOUNTS = ['camila.rojas', 'mateo.quispe'];
+
 @Injectable()
 export class TeacherClassMockApi extends TeacherClassApi {
   private readonly db = inject(MockDb);
   private readonly auth = inject(AuthService);
+  // Docentes agregados en esta sesión (el mock no los guarda en localStorage)
+  private readonly coTeachers = new Map<string, TeacherRef[]>();
 
   getMyClasses(): Observable<TeacherClassSummary[]> {
     return respond(this.ownClasses().map((c) => this.toSummary(c)));
@@ -30,7 +37,25 @@ export class TeacherClassMockApi extends TeacherClassApi {
       const s = this.db.students.find((st) => st.id === id);
       return s ? [{ id: s.id, name: s.name }] : [];
     });
-    return respond({ ...this.toSummary(found), students });
+    return respond({ ...this.toSummary(found), students, teachers: this.teachersOf(found) });
+  }
+
+  addTeacher(classId: string, username: string): Observable<TeacherRef> {
+    const found = this.ownClasses().find((c) => c.id === classId);
+    if (!found) return fail(404);
+    const key = username.trim().toLowerCase();
+    if (MOCK_STUDENT_ACCOUNTS.includes(key)) return fail(422, { problems: ['Ese usuario no es docente.'] });
+    const name = key === 'rosa.diaz' ? 'Rosa Díaz' : MOCK_TEACHER_ACCOUNTS[key];
+    if (!name) return fail(404);
+    if (this.teachersOf(found).some((t) => t.name === name)) return fail(409);
+    const added = { id: `t-${key}`, name };
+    this.coTeachers.set(classId, [...(this.coTeachers.get(classId) ?? []), added]);
+    return respond(added);
+  }
+
+  private teachersOf(c: MockDb['classes'][number]): TeacherRef[] {
+    const owner = this.db.teachers.find((t) => t.id === c.teacherId);
+    return [...(owner ? [{ id: owner.id, name: owner.name }] : []), ...(this.coTeachers.get(c.id) ?? [])];
   }
 
   create({ subject, grade, section }: CreateClassRequest): Observable<TeacherClassSummary> {

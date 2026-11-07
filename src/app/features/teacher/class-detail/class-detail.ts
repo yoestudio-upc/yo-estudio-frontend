@@ -2,6 +2,9 @@ import { HttpErrorResponse } from '@angular/common/http';
 import {
   ChangeDetectionStrategy,
   Component,
+  ElementRef,
+  Injector,
+  afterNextRender,
   computed,
   effect,
   inject,
@@ -9,7 +12,9 @@ import {
   signal,
 } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
+import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 import { TeacherClassApi } from '../../../core/api/teacher-class.api';
 import { TeacherEvaluationApi } from '../../../core/api/teacher-evaluation.api';
 import { LastCourse } from '../../../core/layout/last-course';
@@ -39,13 +44,15 @@ const STUDENTS_PREVIEW = 8;
 @Component({
   selector: 'ye-class-detail',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterLink, Avatar, Button, Card, Icon, PageHeader, StatusBadge],
+  imports: [FormsModule, RouterLink, Avatar, Button, Card, Icon, PageHeader, StatusBadge],
   templateUrl: './class-detail.html',
   styleUrl: './class-detail.scss',
 })
 export class ClassDetail {
   private readonly classApi = inject(TeacherClassApi);
   private readonly evaluationApi = inject(TeacherEvaluationApi);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  private readonly injector = inject(Injector);
 
   // Parámetro :classId de la ruta
   readonly classId = input.required<string>();
@@ -99,6 +106,67 @@ export class ClassDetail {
   protected readonly hasMoreStudents = computed(
     () => (this.detail.value()?.students.length ?? 0) > STUDENTS_PREVIEW,
   );
+
+  // HU12 · Docentes del curso (por ahora solo se agregan)
+  protected readonly teachers = computed(() =>
+    (this.detail.value()?.teachers ?? []).map((t, i) => ({ ...t, tone: rotatingTone(i + 3) })),
+  );
+  protected readonly addingTeacher = signal(false);
+  protected readonly teacherUsername = signal('');
+  protected readonly teacherError = signal<string | null>(null);
+  protected readonly teacherBusy = signal(false);
+
+  protected openAddTeacher(): void {
+    this.addingTeacher.set(true);
+    this.teacherError.set(null);
+    this.notice.set(null);
+    this.focus('#teacher-username');
+  }
+
+  protected closeAddTeacher(): void {
+    this.addingTeacher.set(false);
+    this.teacherUsername.set('');
+    this.teacherError.set(null);
+    this.focus('.add-teacher-toggle');
+  }
+
+  protected async addTeacher(): Promise<void> {
+    const username = this.teacherUsername().trim();
+    if (!username) {
+      this.teacherError.set('Escribe el usuario del docente.');
+      return;
+    }
+    if (this.teacherBusy()) return;
+    this.teacherBusy.set(true);
+    this.teacherError.set(null);
+    try {
+      const added = await firstValueFrom(this.classApi.addTeacher(this.classId(), username));
+      this.notice.set(`¡Listo! ${added.name} ahora es docente de este curso.`);
+      this.addingTeacher.set(false);
+      this.teacherUsername.set('');
+      this.detail.reload();
+    } catch (error) {
+      const status = error instanceof HttpErrorResponse ? error.status : 0;
+      const problems = error instanceof HttpErrorResponse ? error.error?.problems : null;
+      this.teacherError.set(
+        status === 404
+          ? 'No encontramos a ese usuario. Revisa cómo se escribe.'
+          : status === 409
+            ? 'Ya es docente de este curso.'
+            : status === 422
+              ? (problems?.[0] ?? 'Revisa el usuario del docente.')
+              : 'No pudimos agregarlo. Intenta otra vez.',
+      );
+    } finally {
+      this.teacherBusy.set(false);
+    }
+  }
+
+  private focus(selector: string): void {
+    afterNextRender(() => this.host.nativeElement.querySelector<HTMLElement>(selector)?.focus(), {
+      injector: this.injector,
+    });
+  }
 
   // "10 preguntas · Del 29 de septiembre al 3 de octubre · 18 de 26 la resolvieron"
   private meta(e: TeacherEvaluationSummary): string {

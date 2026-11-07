@@ -93,6 +93,70 @@
         }
       </section>
 
+      <section yeCard class="students teachers" aria-labelledby="teachers-title">
+        <div class="students-head">
+          <h2 id="teachers-title">Docentes</h2>
+          <span class="count">{{ course.teachers.length }} en total</span>
+        </div>
+        <ul class="teacher-list" role="list">
+          @for (t of teachers(); track t.id) {
+            <li>
+              <ye-avatar [name]="t.name" [tone]="t.tone" size="sm" />
+              {{ t.name }}
+            </li>
+          }
+        </ul>
+        @if (addingTeacher()) {
+          <form
+            id="add-teacher-form"
+            class="add-teacher"
+            (ngSubmit)="addTeacher()"
+            novalidate
+            aria-label="Agregar docente"
+          >
+            <label class="form-label" for="teacher-username">Usuario del docente</label>
+            <input
+              id="teacher-username"
+              class="form-control"
+              name="username"
+              autocomplete="off"
+              spellcheck="false"
+              maxlength="11"
+              placeholder="Ej. luis.paz"
+              [attr.aria-invalid]="teacherError() ? 'true' : null"
+              [attr.aria-describedby]="teacherError() ? 'teacher-error' : null"
+              [ngModel]="teacherUsername()"
+              (ngModelChange)="teacherUsername.set($event)"
+            />
+            <div class="add-teacher-actions">
+              <button yeButton size="sm" type="submit" [attr.aria-busy]="teacherBusy() || null">
+                Agregar
+              </button>
+              <button yeButton variant="white" size="sm" type="button" (click)="closeAddTeacher()">
+                Cancelar
+              </button>
+            </div>
+            @if (teacherError(); as message) {
+              <p id="teacher-error" class="add-teacher-error" role="alert">{{ message }}</p>
+            }
+          </form>
+        } @else {
+          <button
+            yeButton
+            variant="soft"
+            size="sm"
+            type="button"
+            class="more add-teacher-toggle"
+            aria-controls="add-teacher-form"
+            aria-expanded="false"
+            (click)="openAddTeacher()"
+          >
+            <ye-icon name="plus" [size]="18" />
+            Agregar docente
+          </button>
+        }
+      </section>
+
       <section yeCard class="students" aria-labelledby="students-title">
         <div class="students-head">
           <h2 id="students-title">Estudiantes</h2>

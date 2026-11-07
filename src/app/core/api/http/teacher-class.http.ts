@@ -5,6 +5,7 @@ import {
   CreateClassRequest,
   TeacherClassDetail,
   TeacherClassSummary,
+  TeacherRef,
 } from '../../models/dto/teacher.dto';
 import { API_URL } from '../api-url';
 import { TeacherClassApi } from '../teacher-class.api';
@@ -17,6 +18,7 @@ interface BackendTeacherCourse extends BackendCourse {
 
 interface BackendTeacherCourseDetail extends BackendTeacherCourse {
   students: { id: number; name: string }[];
+  teachers: { id: number; name: string }[];
 }
 
 @Injectable()
@@ -37,8 +39,17 @@ export class TeacherClassHttpApi extends TeacherClassApi {
         map((c) => ({
           ...toSummary(c),
           students: c.students.map((s) => ({ id: String(s.id), name: s.name })),
+          teachers: c.teachers.map((t) => ({ id: String(t.id), name: t.name })),
         })),
       );
+  }
+
+  addTeacher(classId: string, username: string): Observable<TeacherRef> {
+    return this.http
+      .post<{ id: number; name: string }>(`${this.apiUrl}/teachers/me/courses/${classId}/teachers`, {
+        username,
+      })
+      .pipe(map((t) => ({ id: String(t.id), name: t.name })));
   }
 
   create(request: CreateClassRequest): Observable<TeacherClassSummary> {

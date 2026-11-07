@@ -139,7 +139,8 @@
   color: var(--text-3);
 }
 
-.student-list {
+.student-list,
+.teacher-list {
   margin: 0;
 
   li {
@@ -154,6 +155,24 @@
 
 .more {
   margin-top: var(--space-2);
+}
+
+// HU12 · Agregar docente
+.add-teacher {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.add-teacher-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.add-teacher-error {
+  color: var(--orange-ink);
+  font-weight: 700;
 }
 
 .state {

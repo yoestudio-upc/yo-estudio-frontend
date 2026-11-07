@@ -20,6 +20,7 @@ const DETAIL: TeacherClassDetail = {
   studentCount: STUDENTS.length,
   topics: [],
   students: STUDENTS,
+  teachers: [{ id: 't-1', name: 'Rosa Díaz' }],
 };
 
 const evaluation = (
@@ -41,12 +42,15 @@ const evaluation = (
 });
 
 describe('ClassDetail (D1)', () => {
+  let addTeacher: ReturnType<typeof vi.fn>;
+
   async function render(getClass: () => Observable<TeacherClassDetail> = () => of(DETAIL)) {
+    addTeacher = vi.fn();
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
         { provide: AuthApi, useValue: {} },
-        { provide: TeacherClassApi, useValue: { getClass } },
+        { provide: TeacherClassApi, useValue: { getClass, addTeacher } },
         {
           provide: TeacherEvaluationApi,
           useValue: {
@@ -96,6 +100,67 @@ describe('ClassDetail (D1)', () => {
     await fixture.whenStable();
     expect(el.querySelectorAll('.student-list li').length).toBe(10);
     expect(more.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  async function openAddTeacher(el: HTMLElement, fixture: { whenStable(): Promise<unknown> }, username: string) {
+    el.querySelector<HTMLButtonElement>('.add-teacher-toggle')!.click();
+    await fixture.whenStable();
+    const input = el.querySelector<HTMLInputElement>('#teacher-username')!;
+    input.value = username;
+    input.dispatchEvent(new Event('input'));
+    el.querySelector<HTMLFormElement>('.add-teacher button[type="submit"]')!.click();
+    await fixture.whenStable();
+  }
+
+  it('lista a los docentes del curso', async () => {
+    const { el } = await render();
+    const rows = [...el.querySelectorAll('.teacher-list li')];
+    expect(rows.length).toBe(1);
+    expect(rows[0].textContent).toContain('Rosa Díaz');
+  });
+
+  it('agrega un docente y recarga el detalle', async () => {
+    let calls = 0;
+    const { el, fixture } = await render(() => {
+      calls++;
+      return of(DETAIL);
+    });
+    addTeacher.mockReturnValue(of({ id: 't-2', name: 'Luis Paz' }));
+    await openAddTeacher(el, fixture, ' luis.paz ');
+    expect(addTeacher).toHaveBeenCalledWith('c-1', 'luis.paz');
+    expect(el.querySelector('.form-notice')?.textContent).toContain('Luis Paz ahora es docente');
+    expect(el.querySelector('#teacher-username')).toBeNull();
+    expect(calls).toBe(2);
+  });
+
+  it('explica por qué no pudo agregar al docente', async () => {
+    const { el, fixture } = await render();
+    const cases: [HttpErrorResponse, string][] = [
+      [new HttpErrorResponse({ status: 404 }), 'No encontramos a ese usuario'],
+      [new HttpErrorResponse({ status: 409 }), 'Ya es docente de este curso'],
+      [
+        new HttpErrorResponse({ status: 422, error: { problems: ['Ese usuario no es docente.'] } }),
+        'Ese usuario no es docente.',
+      ],
+    ];
+    el.querySelector<HTMLButtonElement>('.add-teacher-toggle')!.click();
+    await fixture.whenStable();
+    for (const [error, message] of cases) {
+      addTeacher.mockReturnValue(throwError(() => error));
+      const input = el.querySelector<HTMLInputElement>('#teacher-username')!;
+      input.value = 'alguien';
+      input.dispatchEvent(new Event('input'));
+      el.querySelector<HTMLFormElement>('.add-teacher button[type="submit"]')!.click();
+      await fixture.whenStable();
+      expect(el.querySelector('.add-teacher [role="alert"]')?.textContent).toContain(message);
+    }
+  });
+
+  it('pide el usuario antes de llamar a la API', async () => {
+    const { el, fixture } = await render();
+    await openAddTeacher(el, fixture, '   ');
+    expect(addTeacher).not.toHaveBeenCalled();
+    expect(el.querySelector('.add-teacher [role="alert"]')?.textContent).toContain('Escribe el usuario');
   });
 
   it('muestra el código para unirse', async () => {

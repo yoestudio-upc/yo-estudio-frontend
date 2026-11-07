@@ -58,8 +58,26 @@ describe('TeacherClassHttpApi', () => {
     api.getClass('3').subscribe((r) => (result = r));
     backend
       .expectOne('/api/teachers/me/courses/3')
-      .flush({ ...BACKEND_COURSE, students: [{ id: 5, name: 'Ana Perez' }] });
-    expect(result).toEqual({ ...SUMMARY, students: [{ id: '5', name: 'Ana Perez' }] });
+      .flush({
+        ...BACKEND_COURSE,
+        students: [{ id: 5, name: 'Ana Perez' }],
+        teachers: [{ id: 1, name: 'Rosa Diaz' }],
+      });
+    expect(result).toEqual({
+      ...SUMMARY,
+      students: [{ id: '5', name: 'Ana Perez' }],
+      teachers: [{ id: '1', name: 'Rosa Diaz' }],
+    });
+  });
+
+  it('agrega un docente al curso por su usuario', () => {
+    let result: { id: string; name: string } | undefined;
+    api.addTeacher('3', 'luis.paz').subscribe((r) => (result = r));
+    const req = backend.expectOne('/api/teachers/me/courses/3/teachers');
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body).toEqual({ username: 'luis.paz' });
+    req.flush({ id: 2, name: 'Luis Paz' });
+    expect(result).toEqual({ id: '2', name: 'Luis Paz' });
   });
 
   it('crea el curso con POST /courses', () => {
