@@ -2,7 +2,7 @@ import { Class } from '../class';
 import { Evaluation } from '../evaluation';
 import { Option } from '../option';
 import { Question } from '../question';
-import { Level, RiskLevel } from '../level';
+import { Level } from '../level';
 import { Subject, Tag } from '../tag';
 
 // Formas que devuelven y reciben los endpoints del portal docente
@@ -110,7 +110,8 @@ export interface StudentDiagnostic {
   topicLevel: Level | null;
   subtopics: (TagRef & { level: Level | null })[];
   // Random Forest: nivel previsto en la siguiente evaluación del tema
-  prediction: { level: Level; risk: RiskLevel } | null;
+  // En riesgo (OB2 8.1): se prevé que quede "En inicio". SOLO lo ve el docente (regla 1)
+  prediction: { level: Level; atRisk: boolean } | null;
   factors: ShapFactor[];
   profile: { name: string; note: string } | null;
   goals: { subtopic: string; practice: string }[];

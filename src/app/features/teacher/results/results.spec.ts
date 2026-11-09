@@ -8,7 +8,7 @@ import { EvaluationResults } from './results';
 const student = (
   id: string,
   name: string,
-  risk: 'high' | 'medium' | 'low' | null,
+  risk: 'high' | 'low' | null,
 ): StudentDiagnostic => ({
   studentId: id,
   name,
@@ -16,7 +16,7 @@ const student = (
   correctCount: risk ? 6 : null,
   topicLevel: risk ? 2 : null,
   subtopics: [{ id: 'st', code: 'st', name: 'Sumar fracciones', level: risk ? 1 : null }],
-  prediction: risk ? { level: risk === 'high' ? 1 : 2, risk } : null,
+  prediction: risk ? { level: risk === 'high' ? 1 : 2, atRisk: risk === 'high' } : null,
   factors: risk
     ? [
         { label: 'Nivel en Sumar fracciones: En inicio', weight: -0.2 },
@@ -71,14 +71,14 @@ describe('EvaluationResults (docente)', () => {
   it('el riesgo siempre va con texto', async () => {
     const { el } = await render();
     const risks = [...el.querySelectorAll('tbody .risk')].map((r) => r.textContent?.trim());
-    expect(risks).toEqual(['Alto', 'Bajo']);
+    expect(risks).toEqual(['En riesgo', 'Sin riesgo']);
   });
 
   it('muestra el detalle con predicción y explicación SHAP del elegido', async () => {
     const { el } = await render();
     const detail = el.querySelector('#student-detail')!;
     expect(detail.textContent).toContain('Ana High');
-    expect(detail.textContent).toContain('Riesgo alto');
+    expect(detail.querySelector('.prediction')?.textContent).toContain('En riesgo');
     expect(detail.textContent).toContain('Aumenta el riesgo');
     expect(detail.textContent).toContain('Reduce el riesgo');
     expect(detail.textContent).toContain('Sumar fracciones');

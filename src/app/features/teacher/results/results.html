@@ -39,11 +39,8 @@
         <p class="stat-label">aciertos en promedio</p>
       </div>
       <div class="stat">
-        <p class="stat-value stat-value--risk">{{ counts().high + counts().medium }}</p>
-        <p class="stat-label">
-          en riesgo
-          <span class="muted">({{ counts().high }} alto · {{ counts().medium }} medio)</span>
-        </p>
+        <p class="stat-value stat-value--risk">{{ counts().atRisk }}</p>
+        <p class="stat-label">en riesgo</p>
       </div>
       <div class="stat">
         <p class="stat-value stat-value--good">{{ counts().achieved }}</p>
@@ -54,9 +51,9 @@
     <p class="note">
       <ye-icon name="lock" [size]="18" />
       <span
-        >El riesgo es la probabilidad de que el estudiante quede <strong>En inicio</strong> en la
-        próxima evaluación de {{ r.evaluation.topic.name }}. Solo tú lo ves; al estudiante todo se
-        le muestra en positivo.</span
+        >Un estudiante está <strong>en riesgo</strong> si se prevé que quede
+        <strong>En inicio</strong> en la próxima evaluación de {{ r.evaluation.topic.name }}. Solo
+        tú lo ves; al estudiante todo se le muestra en positivo.</span
       >
     </p>
 
@@ -79,7 +76,7 @@
               [attr.aria-pressed]="filter() === 'risk'"
               (click)="filter.set('risk')"
             >
-              En riesgo ({{ counts().high + counts().medium }})
+              En riesgo ({{ counts().atRisk }})
             </button>
             <button
               type="button"
@@ -120,9 +117,7 @@
                 <td>{{ s.topicLevel ? levelLabel[s.topicLevel] : 'Sin resolver' }}</td>
                 <td>
                   @if (s.prediction; as p) {
-                    <span class="risk" [class]="'risk risk--' + p.risk">{{
-                      riskLabel[p.risk]
-                    }}</span>
+                    <span [class]="riskClass(p.atRisk)">{{ riskLabel(p.atRisk) }}</span>
                   } @else {
                     <span class="muted">—</span>
                   }
@@ -180,9 +175,7 @@
                 <h3>Próxima evaluación de {{ r.evaluation.topic.name }}</h3>
                 <p>
                   Nivel previsto: <strong>{{ levelLabel[p.level] }}</strong>
-                  <span class="risk" [class]="'risk risk--' + p.risk">
-                    Riesgo {{ riskLabel[p.risk].toLowerCase() }}
-                  </span>
+                  <span [class]="riskClass(p.atRisk)">{{ riskLabel(p.atRisk) }}</span>
                 </p>
               </div>
             }

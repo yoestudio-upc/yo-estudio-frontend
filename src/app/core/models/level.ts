@@ -21,7 +21,3 @@ export const TEACHER_LEVEL_LABEL: Record<Level, string> = {
   2: 'En proceso',
   3: 'Logrado',
 };
-
-// Riesgo = que el alumno quede "En inicio" en la siguiente evaluación del tema.
-// SOLO lo ve el docente (regla 1).
-export type RiskLevel = 'low' | 'medium' | 'high';

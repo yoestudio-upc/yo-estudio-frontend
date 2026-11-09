@@ -46,7 +46,7 @@ describe('TeacherReportsHttpApi', () => {
           correctCount: 1,
           topicLevel: 1,
           subtopics: [{ id: 5, code: 'comparar-fracciones', name: 'Comparar fracciones', level: 1 }],
-          prediction: { level: 1, risk: 'high' },
+          prediction: { level: 1, atRisk: true },
           factors: [{ label: 'Aciertos en Fracciones (25 %)', weight: -0.23 }],
           profile: { name: 'Paso a paso', note: 'Se toma su tiempo y revisa antes de responder.' },
           goals: [],
@@ -72,7 +72,7 @@ describe('TeacherReportsHttpApi', () => {
     expect(result?.students[0].subtopics).toEqual([
       { id: '5', code: 'comparar-fracciones', name: 'Comparar fracciones', level: 1 },
     ]);
-    expect(result?.students[0].prediction).toEqual({ level: 1, risk: 'high' });
+    expect(result?.students[0].prediction).toEqual({ level: 1, atRisk: true });
     expect(result?.students[0].factors[0].weight).toBe(-0.23);
     expect(result?.students[1].prediction).toBeNull();
   });
