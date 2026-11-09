@@ -211,4 +211,34 @@ describe('TakeEvaluation (04)', () => {
       expect.objectContaining({ title: 'Te faltan 2 preguntas' }),
     );
   });
+
+  it('no guarda nada solo por abrir la evaluación', async () => {
+    await render();
+    expect(api['saveProgress']).not.toHaveBeenCalled();
+  });
+
+  it('guarda el avance al cambiar de pregunta, sin esperar a "Guardar y salir"', async () => {
+    const { el, settle, button } = await render();
+    el.querySelector<HTMLInputElement>('input[type=radio]')!.click();
+    await settle();
+    button('Siguiente').click();
+    await settle();
+    expect(api['saveProgress']).toHaveBeenCalledWith(
+      'e-1',
+      expect.objectContaining({ answers: { q1: 'q1-a' }, currentIndex: 1 }),
+    );
+  });
+
+  it('al salir de la página envía el avance y la telemetría con keepalive', async () => {
+    const { el, settle } = await render();
+    el.querySelector<HTMLInputElement>('input[type=radio]')!.click();
+    await settle();
+    window.dispatchEvent(new Event('pagehide'));
+    expect(api['saveProgress']).toHaveBeenCalledWith(
+      'e-1',
+      expect.objectContaining({ answers: { q1: 'q1-a' } }),
+      { keepalive: true },
+    );
+    expect(api['sendTelemetry'].mock.lastCall?.[2]).toEqual({ keepalive: true });
+  });
 });

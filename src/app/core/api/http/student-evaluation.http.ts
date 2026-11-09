@@ -9,7 +9,7 @@ import {
 } from '../../models/dto/student.dto';
 import { Level } from '../../models/level';
 import { API_URL } from '../api-url';
-import { StudentEvaluationApi } from '../student-evaluation.api';
+import { SendOptions, StudentEvaluationApi } from '../student-evaluation.api';
 import { BackendTopicRef, toTagRefs } from './course-dto';
 
 // Formas del backend: mismos campos que los DTO, con ids numéricos
@@ -83,14 +83,27 @@ export class StudentEvaluationHttpApi extends StudentEvaluationApi {
     );
   }
 
-  saveProgress(evaluationId: string, progress: TakeProgress): Observable<void> {
-    return this.http.put<void>(`${this.url(evaluationId)}/progress`, toBackendProgress(progress));
+  saveProgress(
+    evaluationId: string,
+    progress: TakeProgress,
+    options: SendOptions = {},
+  ): Observable<void> {
+    return this.http.put<void>(
+      `${this.url(evaluationId)}/progress`,
+      toBackendProgress(progress),
+      options,
+    );
   }
 
-  sendTelemetry(evaluationId: string, events: TelemetryBatch): Observable<void> {
+  sendTelemetry(
+    evaluationId: string,
+    events: TelemetryBatch,
+    options: SendOptions = {},
+  ): Observable<void> {
     return this.http.post<void>(
       `${this.url(evaluationId)}/telemetry`,
       events.map((e) => ({ ...e, questionId: Number(e.questionId) })),
+      options,
     );
   }
 

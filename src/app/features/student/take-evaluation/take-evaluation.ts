@@ -15,7 +15,7 @@ import {
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
-import { StudentEvaluationApi } from '../../../core/api/student-evaluation.api';
+import { SendOptions, StudentEvaluationApi } from '../../../core/api/student-evaluation.api';
 import { OPTION_LETTERS, isAnswered } from '../../../core/domain/question-rules';
 import { BeforeLeave } from '../../../core/layout/before-leave.guard';
 import {
@@ -106,6 +106,8 @@ export class TakeEvaluation implements BeforeLeave {
   private recorder: TelemetryRecorder | null = null;
   // Terminó o guardó: ya no hace falta guardar al salir
   private closed = false;
+  // La primera pregunta se abre al cargar: ahí todavía no hay nada que guardar
+  private started = false;
 
   constructor() {
     effect(() => {
@@ -133,8 +135,12 @@ export class TakeEvaluation implements BeforeLeave {
   protected onPageHide(): void {
     if (this.closed || !this.recorder) return;
     this.recorder.leave();
-    this.sendTelemetry();
-    this.api.saveProgress(this.evaluationId(), this.progress()).subscribe({ error: () => {} });
+    // Sin keepalive, el navegador cancela estas peticiones al salir de la página
+    const options = { keepalive: true };
+    this.sendTelemetry(options);
+    this.api
+      .saveProgress(this.evaluationId(), this.progress(), options)
+      .subscribe({ error: () => {} });
   }
 
   protected isChosen(optionId: string): boolean {
@@ -192,6 +198,7 @@ export class TakeEvaluation implements BeforeLeave {
     this.seen.update((s) => (s.includes(q.id) ? s : [...s, q.id]));
     this.hint.set(null);
     this.sendTelemetry();
+    if (this.started) this.autosave();
     if (focus) {
       afterNextRender(
         () => this.host.nativeElement.querySelector<HTMLElement>('#question-text')?.focus(),
@@ -291,6 +298,7 @@ export class TakeEvaluation implements BeforeLeave {
     this.recorder = new TelemetryRecorder(undefined, seen, last);
     const index = Math.min(saved?.currentIndex ?? 0, loaded.questions.length - 1);
     this.goTo(Math.max(index, 0), false);
+    this.started = true;
   }
 
   private progress(): TakeProgress {
@@ -319,11 +327,16 @@ export class TakeEvaluation implements BeforeLeave {
     await firstValueFrom(this.api.saveProgress(this.evaluationId(), this.progress()));
   }
 
+  // Si la pestaña o el equipo fallan, solo se pierde la pregunta que estaba en pantalla
+  private autosave(): void {
+    this.api.saveProgress(this.evaluationId(), this.progress()).subscribe({ error: () => {} });
+  }
+
   // Envío en segundo plano al cambiar de pregunta
-  private sendTelemetry(): void {
+  private sendTelemetry(options?: SendOptions): void {
     const events = this.recorder?.flush() ?? [];
     if (events.length) {
-      this.api.sendTelemetry(this.evaluationId(), events).subscribe({ error: () => {} });
+      this.api.sendTelemetry(this.evaluationId(), events, options).subscribe({ error: () => {} });
     }
   }
 

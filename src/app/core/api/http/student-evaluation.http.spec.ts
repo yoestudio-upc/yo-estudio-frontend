@@ -159,4 +159,11 @@ describe('StudentEvaluationHttpApi', () => {
     expect(taken?.progress?.choices).toEqual({ '11': ['21', '22'] });
     expect(taken?.progress?.texts).toEqual({ '12': 'tres' });
   });
+
+  it('puede pedir keepalive para que el envío sobreviva al cierre de la página', () => {
+    api.saveProgress('7', PROGRESS, { keepalive: true }).subscribe();
+    const req = backend.expectOne('/api/students/me/evaluations/7/progress');
+    expect(req.request.keepalive).toBe(true);
+    req.flush(null, { status: 204, statusText: 'No Content' });
+  });
 });

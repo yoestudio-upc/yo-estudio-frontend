@@ -6,13 +6,26 @@ import {
   TelemetryBatch,
 } from '../models/dto/student.dto';
 
+// keepalive: la petición termina aunque la página se cierre
+export interface SendOptions {
+  keepalive?: boolean;
+}
+
 // Rendir una evaluación (pantallas 04 y 05). Nunca devuelve la respuesta correcta ni riesgo.
 export abstract class StudentEvaluationApi {
   abstract getForTaking(evaluationId: string): Observable<TakeEvaluation>;
-  // "Guardar y salir": conserva respuestas y posición
-  abstract saveProgress(evaluationId: string, progress: TakeProgress): Observable<void>;
+  // Autoguardado y "Guardar y salir": conserva respuestas y posición
+  abstract saveProgress(
+    evaluationId: string,
+    progress: TakeProgress,
+    options?: SendOptions,
+  ): Observable<void>;
   // Cada lote trae incrementos desde el envío anterior; el backend los suma
-  abstract sendTelemetry(evaluationId: string, events: TelemetryBatch): Observable<void>;
+  abstract sendTelemetry(
+    evaluationId: string,
+    events: TelemetryBatch,
+    options?: SendOptions,
+  ): Observable<void>;
   // Termina: el backend calcula nivel, perfil y predicción
   abstract submit(evaluationId: string, progress: TakeProgress): Observable<EvaluationResult>;
   abstract getResult(evaluationId: string): Observable<EvaluationResult>;
