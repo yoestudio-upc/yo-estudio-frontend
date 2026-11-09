@@ -18,6 +18,7 @@ import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom, map } from 'rxjs';
 import { TagCatalogApi } from '../../../core/api/tag-catalog.api';
 import { TeacherClassApi } from '../../../core/api/teacher-class.api';
+import { loadedValue } from '../../../core/api/loaded-value';
 import { TeacherEvaluationApi } from '../../../core/api/teacher-evaluation.api';
 import { todayIso } from '../../../core/domain/calendar';
 import { EvaluationCheck, evaluationProblems } from '../../../core/domain/evaluation-rules';
@@ -63,13 +64,15 @@ export class EvaluationEditor implements HasUnsavedChanges {
     params: () => this.evaluationId(),
     stream: ({ params }) => this.evaluationApi.get(params),
   });
-  private readonly courseId = computed(() => this.classId() ?? this.evaluation.value()?.classId);
+  private readonly courseId = computed(
+    () => this.classId() ?? loadedValue(this.evaluation)?.classId,
+  );
   protected readonly course = rxResource({
     params: () => this.courseId(),
     stream: ({ params }) => this.classApi.getClass(params),
   });
   protected readonly catalog = rxResource({
-    params: () => this.course.value()?.subject,
+    params: () => loadedValue(this.course)?.subject,
     stream: ({ params }) => this.catalogApi.getTopics(params),
   });
 
@@ -107,7 +110,7 @@ export class EvaluationEditor implements HasUnsavedChanges {
   );
   protected readonly isScheduled = computed(() => this.status() === 'scheduled');
   protected readonly topic = computed(() =>
-    this.catalog.value()?.find((t) => t.id === this.value().topicId),
+    loadedValue(this.catalog)?.find((t) => t.id === this.value().topicId),
   );
   protected readonly tone = computed(() => topicStyle(this.topic()?.code).tone);
   // Subtemas conocidos: los del catálogo y los que ya trae la evaluación guardada
@@ -140,7 +143,7 @@ export class EvaluationEditor implements HasUnsavedChanges {
 
   constructor() {
     effect(() => {
-      const loaded = this.evaluation.value();
+      const loaded = loadedValue(this.evaluation);
       if (!loaded || loaded.id === this.loadedId) return;
       untracked(() => this.load(loaded));
     });

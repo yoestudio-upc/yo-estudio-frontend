@@ -1,6 +1,7 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { StudentEvaluationApi } from '../../../core/api/student-evaluation.api';
 import { TakeEvaluation as TakeData } from '../../../core/models/dto/student.dto';
 import { Confirm } from '../../../shared/ui/confirm-dialog/confirm-dialog';
@@ -33,9 +34,9 @@ describe('TakeEvaluation (04)', () => {
   let navigate: ReturnType<typeof vi.fn>;
   let confirmAnswer: boolean;
 
-  async function render(data: TakeData = DATA) {
+  async function render(data: TakeData = DATA, load?: () => Observable<TakeData>) {
     api = {
-      getForTaking: vi.fn(() => of(structuredClone(data))),
+      getForTaking: vi.fn(load ?? (() => of(structuredClone(data)))),
       saveProgress: vi.fn(() => of(undefined)),
       sendTelemetry: vi.fn(() => of(undefined)),
       submit: vi.fn(() => of({})),
@@ -240,5 +241,14 @@ describe('TakeEvaluation (04)', () => {
       { keepalive: true },
     );
     expect(api['sendTelemetry'].mock.lastCall?.[2]).toEqual({ keepalive: true });
+  });
+
+  it('avisa si la evaluación ya se resolvió, en lugar de quedarse cargando', async () => {
+    const { el, settle } = await render(DATA, () =>
+      throwError(() => new HttpErrorResponse({ status: 409 })),
+    );
+    await settle();
+    expect(el.querySelector('.state--error')?.textContent).toContain('ya la resolviste');
+    expect(el.textContent).not.toContain('Preparando');
   });
 });

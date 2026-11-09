@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { TeacherClassApi } from '../../../core/api/teacher-class.api';
 import { TeacherEvaluationApi } from '../../../core/api/teacher-evaluation.api';
 import { TeacherEvaluationDetail } from '../../../core/models/dto/teacher.dto';
@@ -41,9 +41,9 @@ describe('QuestionEditor (D3)', () => {
   let api: Record<string, ReturnType<typeof vi.fn>>;
   let navigate: ReturnType<typeof vi.fn>;
 
-  async function render(questionId?: string) {
+  async function render(questionId?: string, load?: () => Observable<TeacherEvaluationDetail>) {
     api = {
-      get: vi.fn(() => of(structuredClone(EVALUATION))),
+      get: vi.fn(load ?? (() => of(structuredClone(EVALUATION)))),
       addQuestion: vi.fn(() => of({})),
       updateQuestion: vi.fn(() => of({})),
     };
@@ -212,5 +212,11 @@ describe('QuestionEditor (D3)', () => {
       options: [],
       acceptedAnswers: ['tres cuartos', '3/4'],
     });
+  });
+
+  it('avisa si la evaluación no existe, en lugar de quedarse cargando', async () => {
+    const { el, fixture } = await render(undefined, () => throwError(() => new Error('404')));
+    await fixture.whenStable();
+    expect(el.querySelector('.state--error')?.textContent).toContain('No encontramos');
   });
 });

@@ -17,6 +17,7 @@ import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom, map } from 'rxjs';
 import { TeacherClassApi } from '../../../core/api/teacher-class.api';
+import { loadedValue } from '../../../core/api/loaded-value';
 import { TeacherEvaluationApi } from '../../../core/api/teacher-evaluation.api';
 import {
   MAX_ACCEPTED,
@@ -68,7 +69,7 @@ export class QuestionEditor implements HasUnsavedChanges {
     stream: ({ params }) => this.evaluationApi.get(params),
   });
   protected readonly course = rxResource({
-    params: () => this.evaluation.value()?.classId,
+    params: () => loadedValue(this.evaluation)?.classId,
     stream: ({ params }) => this.classApi.getClass(params),
   });
 
@@ -109,8 +110,8 @@ export class QuestionEditor implements HasUnsavedChanges {
     return (e?.subtopics ?? []).map((s) => ({ id: s.id, label: `${e?.topic?.name} › ${s.name}` }));
   });
   protected readonly crumbs = computed(() => {
-    const c = this.course.value();
-    const e = this.evaluation.value();
+    const c = loadedValue(this.course);
+    const e = loadedValue(this.evaluation);
     return [
       { label: c ? classLabel(c) : '', link: `/docente/cursos/${e?.classId}` },
       { label: e?.name ?? '', link: this.editorLink() },
@@ -139,7 +140,7 @@ export class QuestionEditor implements HasUnsavedChanges {
 
   constructor() {
     effect(() => {
-      const e = this.evaluation.value();
+      const e = loadedValue(this.evaluation);
       if (!e || this.loaded) return;
       untracked(() => this.load(e));
     });

@@ -15,6 +15,7 @@ import {
 import { rxResource } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { firstValueFrom } from 'rxjs';
+import { loadedValue } from '../../../core/api/loaded-value';
 import { SendOptions, StudentEvaluationApi } from '../../../core/api/student-evaluation.api';
 import { OPTION_LETTERS, isAnswered } from '../../../core/domain/question-rules';
 import { BeforeLeave } from '../../../core/layout/before-leave.guard';
@@ -111,7 +112,7 @@ export class TakeEvaluation implements BeforeLeave {
 
   constructor() {
     effect(() => {
-      const loaded = this.data.value();
+      const loaded = loadedValue(this.data);
       if (!loaded || this.recorder) return;
       untracked(() => this.start(loaded));
     });

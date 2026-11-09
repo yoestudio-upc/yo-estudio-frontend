@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { TagCatalogApi } from '../../../core/api/tag-catalog.api';
 import { TeacherClassApi } from '../../../core/api/teacher-class.api';
 import { TeacherEvaluationApi } from '../../../core/api/teacher-evaluation.api';
@@ -53,9 +53,12 @@ describe('EvaluationEditor (D2)', () => {
   let navigate: ReturnType<typeof vi.fn>;
   let confirmAnswer: boolean;
 
-  async function render(inputs: { classId?: string; evaluationId?: string }) {
+  async function render(
+    inputs: { classId?: string; evaluationId?: string },
+    load?: () => Observable<TeacherEvaluationDetail>,
+  ) {
     api = {
-      get: vi.fn(() => of(structuredClone(EXISTING))),
+      get: vi.fn(load ?? (() => of(structuredClone(EXISTING)))),
       create: vi.fn((_c, d) => of({ ...EXISTING, ...d, id: 'e-new', questions: [] })),
       update: vi.fn((id, d) => of({ ...EXISTING, id, name: d.name })),
       publish: vi.fn(),
@@ -165,5 +168,14 @@ describe('EvaluationEditor (D2)', () => {
     EXISTING.status = 'draft';
     expect(el.textContent).toContain('ya empezó');
     expect(el.querySelector('#ev-name')).toBeNull();
+  });
+
+  it('avisa si la evaluación no existe, en lugar de quedarse cargando', async () => {
+    const { fixture } = await render({ evaluationId: 'no-existe' }, () =>
+      throwError(() => new Error('404')),
+    );
+    await fixture.whenStable();
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.state--error')?.textContent).toContain('No encontramos');
   });
 });
