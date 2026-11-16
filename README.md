@@ -33,6 +33,8 @@ python -m scripts.seed_demo
 
 Los nombres y los datos son ilustrativos.
 
+Para crear más cuentas (docente o estudiante) está la pantalla **Crear una cuenta de prueba** (`/cuentas-de-prueba`, enlace en Ingreso). Solo existe en desarrollo: en el build de producción la ruta no se registra y el backend la apaga en Railway. No es parte del piloto, donde el docente creará las cuentas de sus estudiantes.
+
 ## Estructura
 
 ```
