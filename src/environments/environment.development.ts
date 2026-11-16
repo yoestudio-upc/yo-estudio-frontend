@@ -2,4 +2,6 @@
 export const environment = {
   production: false,
   apiUrl: '/api',
+  // Pantalla de cuentas de prueba (docente o estudiante). No existe en el piloto.
+  testAccounts: true,
 };

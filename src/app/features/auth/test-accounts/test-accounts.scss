@@ -1,0 +1,175 @@
+.page {
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 48px 64px;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: min(720px, 100%);
+  padding: 44px 56px;
+}
+
+// Aviso de que la pantalla no es parte del piloto
+.badge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-inner);
+  background: var(--yellow-bg);
+  color: var(--yellow-ink);
+  font-size: var(--fs-body-sm);
+  font-weight: 700;
+}
+
+.heading {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+
+  h1 {
+    font-size: var(--fs-title-lg);
+  }
+
+  p {
+    font-size: var(--fs-body-lg);
+    color: var(--text-3);
+  }
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.roles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+
+  legend {
+    grid-column: 1 / -1;
+    margin-bottom: var(--space-2);
+  }
+}
+
+// Tarjeta seleccionable: el radio nativo conserva el teclado y el lector de pantalla
+.role {
+  position: relative;
+  display: flex;
+  min-height: var(--btn-h);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-inner);
+  background: var(--surface-alt);
+  cursor: pointer;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    inset: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+
+  &:has(input:checked) {
+    border-color: var(--brand);
+    background: var(--brand-soft);
+    color: var(--brand);
+  }
+
+  &:has(input:focus-visible) {
+    box-shadow: var(--focus-ring);
+  }
+}
+
+.role-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  width: 100%;
+  font-size: var(--fs-body-lg);
+  font-weight: 800;
+}
+
+.names {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.hint {
+  margin-top: calc(-1 * var(--space-3));
+}
+
+.alert {
+  padding: 14px 18px;
+  border-radius: var(--radius-inner);
+  background: var(--orange-soft);
+  color: var(--orange-ink);
+  font-size: var(--fs-body);
+  font-weight: 700;
+}
+
+.state {
+  color: var(--text-3);
+}
+
+.created {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  border-radius: var(--radius-inner);
+  background: var(--surface-alt);
+
+  h2 {
+    font-size: var(--fs-title-sm);
+  }
+
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: 0;
+  }
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    font-size: var(--fs-body);
+  }
+
+  span {
+    color: var(--text-3);
+  }
+}
+
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  align-self: flex-start;
+  min-height: var(--tap-min);
+  color: var(--brand);
+  font-weight: 800;
+}
+
+@media (max-width: 1199px) {
+  .page {
+    padding: var(--space-7);
+  }
+
+  .panel {
+    padding: var(--space-8) 36px;
+  }
+}

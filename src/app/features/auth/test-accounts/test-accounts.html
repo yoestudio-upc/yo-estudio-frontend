@@ -1,0 +1,118 @@
+<main class="page">
+  <section yeCard radius="xl" class="panel" aria-labelledby="test-title">
+    <p class="badge">
+      <ye-icon name="help" [size]="20" />
+      Solo para pruebas. En el piloto, el docente creará las cuentas de sus estudiantes.
+    </p>
+
+    <div class="heading">
+      <h1 id="test-title">Crear una cuenta de prueba</h1>
+      <p>Para probar YoEstudio como docente o como estudiante.</p>
+    </div>
+
+    @if (status.isLoading()) {
+      <p class="state" role="status">Cargando…</p>
+    } @else if (status.error()) {
+      <p class="alert" role="alert">
+        No pudimos conectarnos con el servidor. Revisa que el backend esté encendido.
+      </p>
+    } @else if (!status.value()) {
+      <p class="alert" role="alert">
+        La creación de cuentas de prueba está apagada en este servidor.
+      </p>
+    } @else {
+      @if (notice(); as message) {
+        <p class="form-notice" role="status">{{ message }}</p>
+      }
+
+      <form class="form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+        <fieldset class="roles">
+          <legend class="form-label">¿Qué cuenta quieres crear?</legend>
+          <label class="role">
+            <input type="radio" formControlName="role" value="estudiante" />
+            <span class="role-name">
+              <ye-icon name="star" [size]="22" />
+              Estudiante
+            </span>
+          </label>
+          <label class="role">
+            <input type="radio" formControlName="role" value="docente" />
+            <span class="role-name">
+              <ye-icon name="books" [size]="22" />
+              Docente
+            </span>
+          </label>
+        </fieldset>
+
+        <div class="names">
+          <ye-text-field label="Nombre" [error]="fieldError('firstName')">
+            <input
+              yeInput
+              id="test-first-name"
+              formControlName="firstName"
+              type="text"
+              maxlength="20"
+              autocomplete="off"
+            />
+          </ye-text-field>
+          <ye-text-field label="Apellido" [error]="fieldError('lastName')">
+            <input yeInput formControlName="lastName" type="text" maxlength="60" autocomplete="off" />
+          </ye-text-field>
+        </div>
+
+        <ye-text-field label="Usuario" icon="user" [error]="fieldError('username')">
+          <input
+            yeInput
+            formControlName="username"
+            type="text"
+            placeholder="Ej. camila.r"
+            [attr.maxlength]="usernameMax"
+            autocomplete="off"
+            autocapitalize="none"
+            spellcheck="false"
+          />
+        </ye-text-field>
+        <p class="form-hint hint">
+          Hasta {{ usernameMax }} caracteres: letras sin tildes, números, punto, guion o guion bajo.
+        </p>
+
+        <ye-text-field label="Contraseña" icon="lock" [error]="fieldError('password')">
+          <input
+            yeInput
+            formControlName="password"
+            type="password"
+            maxlength="72"
+            autocomplete="new-password"
+          />
+        </ye-text-field>
+
+        @if (error(); as message) {
+          <p class="alert" role="alert">{{ message }}</p>
+        }
+
+        <button yeButton size="lg" [block]="true" type="submit" [attr.aria-busy]="busy() || null">
+          Crear cuenta
+        </button>
+      </form>
+
+      @if (created().length) {
+        <section class="created" aria-labelledby="created-title">
+          <h2 id="created-title">Cuentas creadas</h2>
+          <ul role="list">
+            @for (a of created(); track a.id) {
+              <li>
+                <strong>{{ a.username }}</strong>
+                <span>{{ a.name }} · {{ roleLabel[a.role] }}</span>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    }
+
+    <a class="back" routerLink="/ingreso">
+      <ye-icon name="arrow-left" [size]="20" />
+      Volver a Ingreso
+    </a>
+  </section>
+</main>

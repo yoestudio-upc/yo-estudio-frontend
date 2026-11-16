@@ -9,7 +9,8 @@ import {
   signal,
 } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../../core/auth/auth.service';
 import { ROLE_HOME } from '../../../core/auth/role-home';
 import { Button } from '../../../shared/ui/button/button';
@@ -22,7 +23,7 @@ import { Yoyo } from '../../../shared/ui/yoyo/yoyo';
 @Component({
   selector: 'ye-login',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [ReactiveFormsModule, Button, Card, Icon, TextField, TextFieldInput, Yoyo],
+  imports: [ReactiveFormsModule, RouterLink, Button, Card, Icon, TextField, TextFieldInput, Yoyo],
   templateUrl: './login.html',
   styleUrl: './login.scss',
 })
@@ -36,6 +37,9 @@ export class Login {
     username: ['', Validators.required],
     password: ['', Validators.required],
   });
+
+  // Enlace a las cuentas de prueba: solo fuera del piloto
+  protected readonly testAccounts = environment.testAccounts;
 
   protected readonly submitted = signal(false);
   protected readonly loading = signal(false);

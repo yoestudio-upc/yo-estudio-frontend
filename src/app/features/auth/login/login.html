@@ -42,7 +42,7 @@
           yeInput
           formControlName="username"
           type="text"
-          placeholder="Ej. camila.rojas"
+          placeholder="Ej. camila.r"
           autocomplete="username"
           autocapitalize="none"
           spellcheck="false"
@@ -80,5 +80,9 @@
       <span class="help-icon"><ye-icon name="help" [size]="20" /></span>
       ¿Olvidaste tu contraseña? Pídele ayuda a tu profe.
     </p>
+
+    @if (testAccounts) {
+      <a class="test-link" routerLink="/cuentas-de-prueba">Crear una cuenta de prueba</a>
+    }
   </section>
 </main>

@@ -1,6 +1,6 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
 import { AuthApi, LoginResponse } from '../../../core/api/auth.api';
 import { fakeToken } from '../../../core/auth/testing';
@@ -12,13 +12,10 @@ describe('Login', () => {
 
   async function render() {
     sessionStorage.clear();
-    navigate = vi.fn().mockResolvedValue(true);
     TestBed.configureTestingModule({
-      providers: [
-        { provide: AuthApi, useValue: { login: () => loginResult() } },
-        { provide: Router, useValue: { navigateByUrl: navigate } },
-      ],
+      providers: [provideRouter([]), { provide: AuthApi, useValue: { login: () => loginResult() } }],
     });
+    navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
     const fixture = TestBed.createComponent(Login);
     await fixture.whenStable();
     const el = fixture.nativeElement as HTMLElement;

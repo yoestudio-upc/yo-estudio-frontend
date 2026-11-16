@@ -140,6 +140,16 @@
   color: var(--yellow-ink);
 }
 
+// Solo fuera del piloto: lleva a las cuentas de prueba
+.test-link {
+  align-self: flex-start;
+  min-height: var(--tap-min);
+  display: inline-flex;
+  align-items: center;
+  color: var(--brand);
+  font-weight: 800;
+}
+
 // Laptops pequeñas y tablets horizontales
 @media (max-width: 1199px) {
   .page {
