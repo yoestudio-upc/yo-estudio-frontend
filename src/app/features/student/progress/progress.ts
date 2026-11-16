@@ -7,6 +7,7 @@ import {
   linkedSignal,
 } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
+import { loadedValue } from '../../../core/api/loaded-value';
 import { StudentClassApi } from '../../../core/api/student-class.api';
 import { StudentProgressApi } from '../../../core/api/student-progress.api';
 import { LastCourse } from '../../../core/layout/last-course';
@@ -37,7 +38,7 @@ export class Progress {
 
   // Curso elegido: el último abierto si está en la lista; si no, el primero
   protected readonly selected = linkedSignal(() => {
-    const list = this.classes.value() ?? [];
+    const list = loadedValue(this.classes) ?? [];
     const last = this.lastCourse.id();
     return list.find((c) => c.id === last)?.id ?? list[0]?.id ?? null;
   });
@@ -47,8 +48,9 @@ export class Progress {
     stream: ({ params }) => this.progressApi.getProgress(params),
   });
 
+  // Las pestañas están fuera del bloque de error: si los cursos no cargan, no hay pestañas
   protected readonly tabs = computed(() =>
-    (this.classes.value() ?? []).map((c) => ({
+    (loadedValue(this.classes) ?? []).map((c) => ({
       id: c.id,
       label: c.name,
       tone: SUBJECT_STYLE[c.subject].tone,
@@ -68,6 +70,12 @@ export class Progress {
     2: '¡ya casi!',
     3: 'ya lo dominas',
   };
+
+  // Si fallaron los cursos, se vuelven a pedir (sin cursos no hay avance que pedir)
+  protected retry(): void {
+    if (this.classes.error()) this.classes.reload();
+    else this.progress.reload();
+  }
 
   protected select(id: string): void {
     this.selected.set(id);

@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Observable, of, throwError } from 'rxjs';
 import { AuthApi } from '../../../core/api/auth.api';
 import { StudentClassApi } from '../../../core/api/student-class.api';
 import { StudentProgressApi } from '../../../core/api/student-progress.api';
@@ -34,12 +35,12 @@ const progressOf = (classId: string): StudentProgress => ({
 });
 
 describe('Progress (07)', () => {
-  async function render() {
+  async function render(getMyClasses: () => Observable<unknown> = () => of(classes)) {
     sessionStorage.clear();
     TestBed.configureTestingModule({
       providers: [
         { provide: AuthApi, useValue: {} },
-        { provide: StudentClassApi, useValue: { getMyClasses: () => of(classes) } },
+        { provide: StudentClassApi, useValue: { getMyClasses } },
         {
           provide: StudentProgressApi,
           useValue: { getProgress: (id: string) => of(progressOf(id)) },
@@ -71,5 +72,19 @@ describe('Progress (07)', () => {
     expect(el.querySelector('[role="tab"][aria-selected="true"]')?.id).toBe('tab-c-com');
     expect(el.querySelector('.topic h2')?.textContent).toContain('Gramática');
     expect(el.textContent).toContain('Yoyo te contará cómo respondes');
+  });
+
+  it('si no cargan los cursos avisa y "Intentar otra vez" los vuelve a pedir', async () => {
+    let fail = true;
+    const { el, fixture } = await render(() =>
+      fail ? throwError(() => new HttpErrorResponse({ status: 0 })) : of(classes),
+    );
+    expect(el.querySelector('.state--error')?.textContent).toContain('No pudimos cargar tu avance');
+    fail = false;
+    el.querySelector<HTMLButtonElement>('.state--error button')!.click();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r));
+    await fixture.whenStable();
+    expect(el.textContent).toContain('1 de 2 subtemas logrados');
   });
 });
