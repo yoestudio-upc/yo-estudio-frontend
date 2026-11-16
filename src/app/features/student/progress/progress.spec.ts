@@ -71,7 +71,7 @@ describe('Progress (07)', () => {
     await fixture.whenStable();
     expect(el.querySelector('[role="tab"][aria-selected="true"]')?.id).toBe('tab-c-com');
     expect(el.querySelector('.topic h2')?.textContent).toContain('Gramática');
-    expect(el.textContent).toContain('Yoyo te contará cómo respondes');
+    expect(el.textContent).toContain('Yoyo todavía está conociendo tu forma de responder');
   });
 
   it('si no cargan los cursos avisa y "Intentar otra vez" los vuelve a pedir', async () => {
