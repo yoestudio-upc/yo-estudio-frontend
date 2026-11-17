@@ -7,6 +7,11 @@ interface Pending {
   revisits: number;
 }
 
+// Topes de un envío por pregunta, los mismos del backend. Sin ellos, una pregunta abierta
+// más de una hora (el recreo con la pantalla encendida) haría rechazar todo el lote.
+export const MAX_TIME_MS = 60 * 60 * 1000;
+export const MAX_COUNT = 1000;
+
 // Telemetría invisible por pregunta (regla 3): tiempo con la pregunta en pantalla,
 // cambios de opción, omisiones ("Dejar para después") y revisitas. Sin cronómetro.
 // flush() devuelve lo acumulado DESDE el último envío (incrementos), así un
@@ -67,10 +72,35 @@ export class TelemetryRecorder {
     this.accumulate();
     if (this.current && this.since !== null) this.since = this.now();
     const events = [...this.pending]
-      .map(([questionId, p]) => ({ questionId, ...p }))
+      .map(([questionId, p]) => ({
+        questionId,
+        timeMs: Math.min(p.timeMs, MAX_TIME_MS),
+        optionChanges: Math.min(p.optionChanges, MAX_COUNT),
+        skipped: p.skipped,
+        revisits: Math.min(p.revisits, MAX_COUNT),
+      }))
       .filter((e) => e.timeMs || e.optionChanges || e.skipped || e.revisits);
     this.pending.clear();
     return events;
+  }
+
+  // Un lote que no llegó al servidor vuelve a la cola y sale con el siguiente envío
+  restore(events: AnswerEvent[]): void {
+    for (const e of events) {
+      const p = this.stat(e.questionId);
+      p.timeMs += e.timeMs;
+      p.optionChanges += e.optionChanges;
+      p.revisits += e.revisits;
+      p.skipped = p.skipped || e.skipped;
+    }
+  }
+
+  // Tras un leave() que no terminó en salir (falló el envío): la pregunta sigue en
+  // pantalla y su tiempo vuelve a correr, sin contar una revisita
+  stay(questionId: string): void {
+    if (this.current) return;
+    this.current = questionId;
+    this.since = this.now();
   }
 
   private accumulate(): void {

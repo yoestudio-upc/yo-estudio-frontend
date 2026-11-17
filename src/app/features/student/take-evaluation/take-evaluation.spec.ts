@@ -40,6 +40,7 @@ describe('TakeEvaluation (04)', () => {
       saveProgress: vi.fn(() => of(undefined)),
       sendTelemetry: vi.fn(() => of(undefined)),
       submit: vi.fn(() => of({})),
+      getResult: vi.fn(() => of({})),
     };
     confirmAnswer = true;
     TestBed.configureTestingModule({
@@ -250,5 +251,77 @@ describe('TakeEvaluation (04)', () => {
     await settle();
     expect(el.querySelector('.state--error')?.textContent).toContain('ya la resolviste');
     expect(el.textContent).not.toContain('Preparando');
+  });
+
+  const offline = () => throwError(() => new HttpErrorResponse({ status: 0 }));
+  const toResult = [
+    ['/estudiante/evaluaciones', 'e-1', 'resultado'],
+    expect.objectContaining({ replaceUrl: true }),
+  ];
+
+  it('si la telemetría no llega, igual envía las respuestas y la telemetría sale después', async () => {
+    const { el, fixture, button, settle } = await render();
+    api['sendTelemetry'].mockImplementationOnce(offline);
+    el.querySelector<HTMLInputElement>('input[type="radio"]')!.click();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 5));
+    button('Terminar evaluación').click();
+    await settle();
+    expect(api['submit']).toHaveBeenCalled();
+    expect(navigate).toHaveBeenCalledWith(...toResult);
+    // El lote que falló se reintenta después del envío, con el mismo contenido
+    expect(api['sendTelemetry']).toHaveBeenCalledTimes(2);
+    expect(api['sendTelemetry'].mock.calls[1][1]).toEqual(api['sendTelemetry'].mock.calls[0][1]);
+  });
+
+  it('un lote de telemetría rechazado por el servidor no se repite', async () => {
+    const { el, fixture, button, settle } = await render();
+    api['sendTelemetry'].mockImplementationOnce(() =>
+      throwError(() => new HttpErrorResponse({ status: 422 })),
+    );
+    el.querySelector<HTMLInputElement>('input[type="radio"]')!.click();
+    await fixture.whenStable();
+    await new Promise((r) => setTimeout(r, 5));
+    button('Terminar evaluación').click();
+    await settle();
+    expect(api['submit']).toHaveBeenCalled();
+    expect(api['sendTelemetry']).toHaveBeenCalledTimes(1);
+  });
+
+  it('si las respuestas ya habían llegado (409), va al resultado en vez de pedir reintentar', async () => {
+    const { button, settle } = await render();
+    api['submit'].mockImplementation(() =>
+      throwError(() => new HttpErrorResponse({ status: 409 })),
+    );
+    button('Terminar evaluación').click();
+    await settle();
+    expect(api['getResult']).toHaveBeenCalledWith('e-1');
+    expect(navigate).toHaveBeenCalledWith(...toResult);
+  });
+
+  it('si la evaluación cerró mientras la resolvía, lo dice', async () => {
+    const { el, button, settle } = await render();
+    api['submit'].mockImplementation(() =>
+      throwError(() => new HttpErrorResponse({ status: 409 })),
+    );
+    api['getResult'].mockImplementation(() =>
+      throwError(() => new HttpErrorResponse({ status: 404 })),
+    );
+    button('Terminar evaluación').click();
+    await settle();
+    expect(el.textContent).toContain('Esta evaluación ya cerró');
+    expect(navigate).not.toHaveBeenCalled();
+  });
+
+  it('sin conexión al terminar, avisa y deja reintentar', async () => {
+    const { el, button, settle } = await render();
+    api['submit'].mockImplementationOnce(offline);
+    button('Terminar evaluación').click();
+    await settle();
+    expect(el.textContent).toContain('No pudimos enviar tus respuestas');
+    button('Terminar evaluación').click();
+    await settle();
+    expect(api['submit']).toHaveBeenCalledTimes(2);
+    expect(navigate).toHaveBeenCalledWith(...toResult);
   });
 });

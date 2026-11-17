@@ -23,6 +23,7 @@ import {
   TakeEvaluation as TakeData,
   TakeProgress,
   TakeQuestion,
+  TelemetryBatch,
 } from '../../../core/models/dto/student.dto';
 import { topicStyle } from '../../../shared/topic/topic-style';
 import { Button } from '../../../shared/ui/button/button';
@@ -241,6 +242,7 @@ export class TakeEvaluation implements BeforeLeave {
       void this.router.navigate(['/estudiante/cursos', this.data.value()?.classId]);
     } catch {
       this.error.set('No pudimos guardar tu avance. Revisa tu conexión e intenta otra vez.');
+      this.keepTiming();
     } finally {
       this.busy.set(false);
     }
@@ -265,14 +267,45 @@ export class TakeEvaluation implements BeforeLeave {
       await this.sendTelemetryNow();
       await firstValueFrom(this.api.submit(this.evaluationId(), this.progress()));
       this.closed = true;
-      void this.router.navigate(['/estudiante/evaluaciones', this.evaluationId(), 'resultado'], {
-        replaceUrl: true,
-      });
-    } catch {
-      this.error.set('No pudimos enviar tus respuestas. Revisa tu conexión e intenta otra vez.');
+      // Lo que no llegó antes del envío: el backend lo acepta si llega enseguida después
+      this.sendTelemetry();
+      this.goToResult();
+    } catch (error) {
+      if (error instanceof HttpErrorResponse && error.status === 409) {
+        await this.alreadyClosed();
+      } else {
+        this.error.set('No pudimos enviar tus respuestas. Revisa tu conexión e intenta otra vez.');
+        this.keepTiming();
+      }
     } finally {
       this.busy.set(false);
     }
+  }
+
+  // 409 al enviar: las respuestas ya habían llegado (se cortó la conexión antes de la
+  // respuesta, o se envió desde otra pestaña) o la evaluación cerró mientras la resolvía
+  private async alreadyClosed(): Promise<void> {
+    this.closed = true;
+    try {
+      await firstValueFrom(this.api.getResult(this.evaluationId()));
+      this.goToResult();
+    } catch {
+      this.error.set(
+        'Esta evaluación ya cerró, así que no pudimos enviar tus respuestas. Avísale a tu profe.',
+      );
+    }
+  }
+
+  private goToResult(): void {
+    void this.router.navigate(['/estudiante/evaluaciones', this.evaluationId(), 'resultado'], {
+      replaceUrl: true,
+    });
+  }
+
+  // No se pudo salir de la pregunta: su tiempo sigue corriendo
+  private keepTiming(): void {
+    const q = this.question();
+    if (q) this.recorder?.stay(q.id);
   }
 
   private start(loaded: TakeData): void {
@@ -337,12 +370,28 @@ export class TakeEvaluation implements BeforeLeave {
   private sendTelemetry(options?: SendOptions): void {
     const events = this.recorder?.flush() ?? [];
     if (events.length) {
-      this.api.sendTelemetry(this.evaluationId(), events, options).subscribe({ error: () => {} });
+      this.api
+        .sendTelemetry(this.evaluationId(), events, options)
+        .subscribe({ error: (error: unknown) => this.requeue(events, error) });
     }
   }
 
+  // La telemetría nunca impide guardar el avance ni enviar las respuestas
   private async sendTelemetryNow(): Promise<void> {
     const events = this.recorder?.flush() ?? [];
-    if (events.length) await firstValueFrom(this.api.sendTelemetry(this.evaluationId(), events));
+    if (!events.length) return;
+    try {
+      await firstValueFrom(this.api.sendTelemetry(this.evaluationId(), events));
+    } catch (error) {
+      this.requeue(events, error);
+    }
+  }
+
+  // Sin conexión o con un error del servidor, el lote vuelve a la cola y sale con el
+  // siguiente envío. Si el servidor lo rechazó (4xx), repetirlo daría lo mismo.
+  private requeue(events: TelemetryBatch, error: unknown): void {
+    const rejected =
+      error instanceof HttpErrorResponse && error.status >= 400 && error.status < 500;
+    if (!rejected) this.recorder?.restore(events);
   }
 }

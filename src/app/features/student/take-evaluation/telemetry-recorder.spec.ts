@@ -1,4 +1,4 @@
-import { TelemetryRecorder } from './telemetry-recorder';
+import { MAX_TIME_MS, TelemetryRecorder } from './telemetry-recorder';
 
 describe('TelemetryRecorder', () => {
   let t: number;
@@ -7,6 +7,40 @@ describe('TelemetryRecorder', () => {
     Object.fromEntries(events.map((e) => [e.questionId, e]));
 
   beforeEach(() => (t = 0));
+
+  it('un lote que no llegó vuelve a la cola y se suma a lo nuevo', () => {
+    const r = new TelemetryRecorder(clock);
+    r.enter('q1');
+    r.select('q1', 'a');
+    r.select('q1', 'b');
+    r.skip('q1');
+    t = 4000;
+    const lost = r.flush();
+    t = 6000;
+    r.restore(lost);
+    const [event] = r.flush();
+    expect(event).toEqual({ questionId: 'q1', timeMs: 6000, optionChanges: 1, skipped: true, revisits: 0 });
+    expect(r.flush()).toEqual([]);
+  });
+
+  it('una pregunta abierta más de una hora no pasa del tope que acepta el backend', () => {
+    const r = new TelemetryRecorder(clock);
+    r.enter('q1');
+    t = 3 * MAX_TIME_MS;
+    expect(r.flush()[0].timeMs).toBe(MAX_TIME_MS);
+  });
+
+  it('si no se pudo salir de la pregunta, su tiempo sigue corriendo sin contar revisita', () => {
+    const r = new TelemetryRecorder(clock);
+    r.enter('q1');
+    t = 1000;
+    r.leave();
+    r.stay('q1');
+    t = 3000;
+    const [event] = r.flush();
+    expect(event.timeMs).toBe(3000);
+    expect(event.revisits).toBe(0);
+  });
 
   it('mide el tiempo de cada pregunta y cuenta revisitas', () => {
     const r = new TelemetryRecorder(clock);
